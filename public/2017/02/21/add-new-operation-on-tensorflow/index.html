@@ -1,0 +1,616 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    
+    <title>텐서플로우에 새로운 연산 추가하기(커스터마이징) | Tensorflow Internal</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    
+        <meta name="keywords" content="tensorflow,internal,build">
+    
+
+      
+
+            <meta name="description" content="텐서플로우를 이용해서 소스코드를 작성하다보면 가끔 내가 만든 연산을 추가하고 싶다는 생각이 듭니다.이럴 경우에 텐서플로우에서는 operation을 추가하는 방법을 공식홈페이지에서 설명해주고 있습니다.https://www.tensorflow.org/extend/adding_an_op하지만 영어로 되어있기에… 개인 저장용으로 operation을 텐서플로우에 추">
+<meta property="og:type" content="article">
+<meta property="og:title" content="텐서플로우에 새로운 연산 추가하기(커스터마이징)">
+<meta property="og:url" content="https://deeptensorflow.github.io/2017/02/21/add-new-operation-on-tensorflow/index.html">
+<meta property="og:site_name" content="Tensorflow Internal">
+<meta property="og:description" content="텐서플로우를 이용해서 소스코드를 작성하다보면 가끔 내가 만든 연산을 추가하고 싶다는 생각이 듭니다.이럴 경우에 텐서플로우에서는 operation을 추가하는 방법을 공식홈페이지에서 설명해주고 있습니다.https://www.tensorflow.org/extend/adding_an_op하지만 영어로 되어있기에… 개인 저장용으로 operation을 텐서플로우에 추">
+<meta property="og:image" content="https://deeptensorflow.github.io/images/logo.png">
+<meta property="og:updated_time" content="2017-02-23T20:02:39.000Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="텐서플로우에 새로운 연산 추가하기(커스터마이징)">
+<meta name="twitter:description" content="텐서플로우를 이용해서 소스코드를 작성하다보면 가끔 내가 만든 연산을 추가하고 싶다는 생각이 듭니다.이럴 경우에 텐서플로우에서는 operation을 추가하는 방법을 공식홈페이지에서 설명해주고 있습니다.https://www.tensorflow.org/extend/adding_an_op하지만 영어로 되어있기에… 개인 저장용으로 operation을 텐서플로우에 추">
+<meta name="twitter:image" content="https://deeptensorflow.github.io/images/logo.png">
+<meta name="twitter:creator" content="@deeptensorflow">
+<link rel="publisher" href="deeptensorflow">
+<meta property="fb:admins" content="399789273734884">
+<meta property="fb:app_id" content="399789273734884">
+    
+
+    
+    <link rel="canonical" href="https://deeptensorflow.github.io/2017/02/21/add-new-operation-on-tensorflow/">
+    
+        <link rel="alternate" href="/feed.xml" title="Tensorflow Internal" type="application/atom+xml">
+    
+
+    
+        <link rel="icon" href="https://deeptensorflow.github.io/images/favicon.ico">
+    
+
+    <link rel="stylesheet" href="/libs/font-awesome/css/font-awesome.min.css">
+    <link rel="stylesheet" href="/libs/titillium-web/styles.css">
+    <link rel="stylesheet" href="/libs/source-code-pro/styles.css">
+
+    <link rel="stylesheet" href="/css/style.css">
+
+    <script src="/libs/jquery/2.0.3/jquery.min.js"></script>
+    
+    
+        <link rel="stylesheet" href="/libs/lightgallery/css/lightgallery.min.css">
+    
+    
+        <script type="text/javascript">
+(function(i,s,o,g,r,a,m) {i['GoogleAnalyticsObject']=r;i[r]=i[r]||function() {
+(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+})(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+ga('create', 'UA-92230405-1', 'auto');
+ga('send', 'pageview');
+
+</script>
+    
+    
+
+</head>
+</html>
+<body>
+    <div id="wrap">
+        <header id="header">
+    <div id="header-outer" class="outer">
+        <div class="container">
+            <div class="container-inner">
+                <div id="header-title">
+                    <h1 class="logo-wrap">
+                        <a href="/" class="logo"></a>
+                    </h1>
+                    
+                        <h2 class="subtitle-wrap">
+                            <p class="subtitle">All about tensorflow</p>
+                        </h2>
+                    
+                </div>
+                <div id="header-inner" class="nav-container">
+                    <a id="main-nav-toggle" class="nav-icon fa fa-bars"></a>
+                    <div class="nav-container-inner">
+                        <ul id="main-nav">
+                            
+                                <li class="main-nav-list-item">
+                                    <a class="main-nav-list-link" href="/">Home</a>
+                                </li>
+                            
+                                        <ul class="main-nav-list"><li class="main-nav-list-item"><a class="main-nav-list-link" href="/categories/Machinelearning/">Machinelearning</a><ul class="main-nav-list-child"><li class="main-nav-list-item"><a class="main-nav-list-link" href="/categories/Machinelearning/Lecture/">Lecture</a></li><li class="main-nav-list-item"><a class="main-nav-list-link" href="/categories/Machinelearning/News/">News</a></li></ul></li><li class="main-nav-list-item"><a class="main-nav-list-link" href="/categories/TensorFlow/">TensorFlow</a><ul class="main-nav-list-child"><li class="main-nav-list-item"><a class="main-nav-list-link" href="/categories/TensorFlow/App/">App</a></li></ul></li><li class="main-nav-list-item"><a class="main-nav-list-link" href="/categories/Tensorflow/">Tensorflow</a><ul class="main-nav-list-child"><li class="main-nav-list-item"><a class="main-nav-list-link" href="/categories/Tensorflow/App/">App</a></li><li class="main-nav-list-item"><a class="main-nav-list-link" href="/categories/Tensorflow/Internal/">Internal</a></li></ul></li></ul>
+                                    
+                        </ul>
+                        <nav id="sub-nav">
+                            <div id="search-form-wrap">
+
+    <form class="search-form">
+        <input type="text" class="ins-search-input search-form-input" placeholder="Search">
+        <button type="submit" class="search-form-submit"></button>
+    </form>
+    <div class="ins-search">
+    <div class="ins-search-mask"></div>
+    <div class="ins-search-container">
+        <div class="ins-input-wrapper">
+            <input type="text" class="ins-search-input" placeholder="Type something...">
+            <span class="ins-close ins-selectable"><i class="fa fa-times-circle"></i></span>
+        </div>
+        <div class="ins-section-wrapper">
+            <div class="ins-section-container"></div>
+        </div>
+    </div>
+</div>
+<script>
+(function (window) {
+    var INSIGHT_CONFIG = {
+        TRANSLATION: {
+            POSTS: 'Posts',
+            PAGES: 'Pages',
+            CATEGORIES: 'Categories',
+            TAGS: 'Tags',
+            UNTITLED: '(Untitled)',
+        },
+        ROOT_URL: '/',
+        CONTENT_URL: '/content.json',
+    };
+    window.INSIGHT_CONFIG = INSIGHT_CONFIG;
+})(window);
+</script>
+<script src="/js/insight.js"></script>
+
+</div>
+                        </nav>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</header>
+        <div class="container">
+            <div class="main-body container-inner">
+                <div class="main-body-inner">
+                    <section id="main">
+                        <div class="main-body-header">
+    <h1 class="header">
+    
+    <a class="page-title-link" href="/categories/Tensorflow/">Tensorflow</a><i class="icon fa fa-angle-right"></i><a class="page-title-link" href="/categories/Tensorflow/Internal/">Internal</a>
+    </h1>
+</div>
+                        <div class="main-body-content">
+                            <article id="post-add-new-operation-on-tensorflow" class="article article-single article-type-post" itemscope="" itemprop="blogPost">
+    <div class="article-inner">
+        
+            <header class="article-header">
+                
+    
+        <h1 class="article-title" itemprop="name">
+        텐서플로우에 새로운 연산 추가하기(커스터마이징)
+        </h1>
+    
+
+            </header>
+        
+        
+            <div class="article-subtitle">
+                <a href="/2017/02/21/add-new-operation-on-tensorflow/" class="article-date">
+    <time datetime="2017-02-21T13:24:53.000Z" itemprop="datePublished">2017-02-21</time>
+</a>
+                
+    <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/build/">build</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/internal/">internal</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/tensorflow/">tensorflow</a></li></ul>
+
+            </div>
+        
+        
+        <div class="article-entry" itemprop="articleBody">
+            <p>텐서플로우를 이용해서 소스코드를 작성하다보면 가끔 내가 만든 연산을 추가하고 싶다는 생각이 듭니다.<br>이럴 경우에 텐서플로우에서는 operation을 추가하는 방법을 공식홈페이지에서 설명해주고 있습니다.<br><a href="https://www.tensorflow.org/extend/adding_an_op" rel="external nofollow noopener noreferrer" target="_blank">https://www.tensorflow.org/extend/adding_an_op</a><br>하지만 영어로 되어있기에… 개인 저장용으로 operation을 텐서플로우에 추가하는 방법을 적어보고자 합니다.</p>
+<h1 id="operation-추가하기"><a href="#operation-추가하기" class="headerlink" title="operation 추가하기"></a>operation 추가하기</h1><p>기존 TensorFlow 라이브러리에서 다루지 않는 연산을 만들려면 먼저 파이썬에서 연산을 기존 파이썬 연산이나 함수의 조합으로 작성하는 것이 좋습니다.<br>이것이 가능하지 않으면 사용자 정의 C ++ op를 작성할 수 있습니다.<br>사용자 정의 C ++ 연산을 작성하는 데에는 여러 가지 이유가 있습니다.</p>
+<ul>
+<li>기존 작업의 구성으로 작업을 표현하는 것이 쉽지 않거나 가능하지 않은 경우</li>
+<li>기존 기본 요소의 구성으로 작업을 표현하는 것은 효율적이지 않은 경우</li>
+<li>원래 있던 기존의 요소들을 미래의 컴파일러가 융합하기 힘들어하는 경우<br>즉, 왠만하면 기존의 텐서플로우 op로 연산을 하되 기존의 op로 연산이 불가능하거나 효율적이지 않은 경우 본인의 op를 직접 추가하라는 말입니다.</li>
+</ul>
+<p>맞춤 작업을 통합하려면 다음 작업이 필요합니다.</p>
+<ol>
+<li>새로운 op를 C ++ 파일로 등록하십시오. Op 등록은 op의 구현과 독립적인 op 기능을위한 인터페이스를 정의합니다. 예를 들어 op 등록은 op의 이름과 op의 입력과 출력을 정의합니다. 또한 텐서의 모양을 정의합니다.</li>
+<li>C ++로 op의 실제 동작을 구현하십시오. op의 구현은 커널로 알려져 있으며 1 단계에서 등록한 인터페이스의 구체적인 구현입니다.(실제 연산을 정의하라는 말) 다양한 입/출력 유형 또는 아키텍처 (예 : CPU, GPU)에 대해 여러 개의 커널이있을 수 있습니다.</li>
+<li>Python 래퍼를 만듭니다 (선택 사항). 이 래퍼는 Python에서 op를 만드는 데 사용되는 공용 API입니다. op 등록에서 기본 래퍼가 생성됩니다.이 래퍼는 직접 사용하거나 추가 할 수 있습니다.</li>
+<li>op (옵션)의 gradient를 계산하는 함수를 작성합니다.</li>
+<li>op를 테스트하십시오. 우리는 대개 편의상 Python에서 이 작업을 수행하지만 C++로 op를 테스트 할 수도 있습니다. Gradient를 정의하면 파이썬 gradient checker로 확인할 수 있습니다. relu_op_test.pyRelu를 보면 Relu-like operators의 forward함수와 그들의 gradient를 확인할 수 있습니다.</li>
+</ol>
+<h1 id="op의-인터페이스-정의"><a href="#op의-인터페이스-정의" class="headerlink" title="op의 인터페이스 정의"></a>op의 인터페이스 정의</h1><p>op의 인터페이스는 TensorFlow 시스템에 등록하여 정의합니다.<br>등록시 op의 이름, 입력 (유형 및 이름) 및 출력 (유형 및 이름)과 op가 필요할 수 있는 docstrings 및 attrs를 지정합니다.<br>이것이 어떻게 작동 하는지를보기 위해 예시를 들어보겠습니다.<br>int32 형태의 첫 번째 요소를 제외한 모든 요소가 0으로 되는 텐서 복사본을 출력 하는 op를 만들고 싶다고 가정합니다.<br>이렇게하려면 명명 된 파일을 만듭니다 zero_out.cc.<br>그런 다음 REGISTER_OP사용자 인터페이스에 대한 인터페이스를 정의하는 매크로 호출을 추가 하십시오.<br>~tensorflow/core/user_ops 에 파일을 만들었습니다.<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div></pre></td><td class="code"><pre><div class="line">#include &quot;tensorflow/core/framework/op.h&quot;</div><div class="line">#include &quot;tensorflow/core/framework/shape_inference.h&quot;</div><div class="line"></div><div class="line">using namespace tensorflow;</div><div class="line"></div><div class="line">REGISTER_OP(&quot;ZeroOut&quot;)</div><div class="line">    .Input(&quot;to_zero: int32&quot;)</div><div class="line">    .Output(&quot;zeroed: int32&quot;)</div><div class="line">    .SetShapeFn([](::tensorflow::shape_inference::InferenceContext* c) &#123;</div><div class="line">      c-&gt;set_output(0, c-&gt;input(0));</div><div class="line">      return Status::OK();</div><div class="line">    &#125;);</div></pre></td></tr></table></figure></p>
+<p>이 ZeroOut연산은 하나의 텐서 to_zero32 비트 정수를 입력으로 취해서 텐서 32 비트 정수 zeroed을 출력합니다.<br>op는 출력 텐서가 입력 텐서와 동일한 모양인지 확인하기 위해 shape 함수를 사용합니다.<br>예를 들어, 입력이 텐서 형태 [10, 20]이면이 모양 함수는 출력 모양도 [10, 20]으로 지정합니다.</p>
+<ul>
+<li>이름 지정에 대한 참고 사항 : op 이름은 CamelCase여야하며 binary file에 등록된 다른 모든 운영 체제 중에서 고유해야합니다.</li>
+</ul>
+<h1 id="op의-kernel코드-작성"><a href="#op의-kernel코드-작성" class="headerlink" title="op의 kernel코드 작성"></a>op의 kernel코드 작성</h1><p>인터페이스를 정의한 후에 op의 하나 이상의 구현을 제공하십시오.<br>커널을 만드려면 OpKernel을 확장하는 클래스를 만들어야합니다.<br>그리고 Compute method를 오버라이드 해야합니다.<br>Compute메서드는 OpKernelContext* type의 context 인수를 하나 제공합니다.<br>이 인수를 사용하여 입력 및 출력 텐서와 같은 유용한 항목에 액세스 할 수 있습니다.<br>위에 작성한 파일에 커널을 추가하십시오. 커널은 다음과 같이 생겼습니다.<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div></pre></td><td class="code"><pre><div class="line">#include &quot;tensorflow/core/framework/op_kernel.h&quot;</div><div class="line"></div><div class="line">using namespace tensorflow;</div><div class="line"></div><div class="line">class ZeroOutOp : public OpKernel &#123;</div><div class="line"> public:</div><div class="line">  explicit ZeroOutOp(OpKernelConstruction* context) : OpKernel(context) &#123;&#125;</div><div class="line"></div><div class="line">  void Compute(OpKernelContext* context) override &#123;</div><div class="line">    // Grab the input tensor</div><div class="line">    const Tensor&amp; input_tensor = context-&gt;input(0);</div><div class="line">    auto input = input_tensor.flat&lt;int32&gt;();</div><div class="line"></div><div class="line">    // Create an output tensor</div><div class="line">    Tensor* output_tensor = NULL;</div><div class="line">    OP_REQUIRES_OK(context, context-&gt;allocate_output(0, input_tensor.shape(),</div><div class="line">                                                     &amp;output_tensor));</div><div class="line">    auto output = output_tensor-&gt;flat&lt;int32&gt;();</div><div class="line"></div><div class="line">    // Set all but the first element of the output tensor to 0.</div><div class="line">    const int N = input.size();</div><div class="line">    for (int i = 1; i &lt; N; i++) &#123;</div><div class="line">      output(i) = 0;</div><div class="line">    &#125;</div><div class="line"></div><div class="line">    // Preserve the first input value if possible.</div><div class="line">    if (N &gt; 0) output(0) = input(0);</div><div class="line">  &#125;</div><div class="line">&#125;;</div></pre></td></tr></table></figure></p>
+<p>커널을 구현 한 후에는 TensorFlow 시스템에 등록하십시오.<br>등록시 이 커널이 실행될 다른 제약 조건을 지정합니다.<br>예를 들어, CPU 용으로 만든 커널 하나와 GPU 용으로 만든 커널을 따로 가질 수 있습니다.</p>
+<p>그리고 이것을 ZeroOut op가 하기 위해서 아래의 코드를 zero_out.cc 코드에 추가합니다.<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">REGISTER_KERNEL_BUILDER(Name(&quot;ZeroOut&quot;).Device(DEVICE_CPU), ZeroOutOp);</div></pre></td></tr></table></figure></p>
+<h1 id="op라이브러리-빌드"><a href="#op라이브러리-빌드" class="headerlink" title="op라이브러리 빌드"></a>op라이브러리 빌드</h1><p>두가지 방법을 제시하고 있습니다.<br>g++을 통한 방법과 bazel을 통한 방법인데요.<br>bazel을 통한 빌드가 더 빠르다는 커뮤니티원의 정보를 듣고 bazel만으로 빌드를 진행했습니다.</p>
+<p>TensorFlow 소스가 설치되어있는 경우 TensorFlow의 빌드 시스템을 사용하여 작업을 컴파일 할 수 있습니다.<br>디렉토리에 다음 Bazel 빌드 규칙이있는 BUILD 파일을 tensorflow/core/user_ops놓습니다.<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div></pre></td><td class="code"><pre><div class="line">load(&quot;//tensorflow:tensorflow.bzl&quot;, &quot;tf_custom_op_library&quot;)</div><div class="line"></div><div class="line">tf_custom_op_library(</div><div class="line">    name = &quot;zero_out.so&quot;,</div><div class="line">    srcs = [&quot;zero_out.cc&quot;],</div><div class="line">)</div></pre></td></tr></table></figure></p>
+<p>zero_out.so를 빌드하기 위해서는 아래의 명령어를 입력해주세요.<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">bazel build --config opt //tensorflow/core/user_ops:zero_out.so</div></pre></td></tr></table></figure></p>
+<p>참고 : .so표준 cc_library규칙 을 사용하여 공유 라이브러리(파일)를 만들 수 있지만 tf_custom_op_library매크로를 사용하는 것이 좋습니다. 몇 가지 필수 종속성을 추가하고 공유 라이브러리가 TensorFlow의 플러그인로드 메커니즘과 호환되는지 확인하기위한 검사를 수행합니다.</p>
+<h1 id="파이썬에서-op를-사용하기-위한-방법"><a href="#파이썬에서-op를-사용하기-위한-방법" class="headerlink" title="파이썬에서 op를 사용하기 위한 방법"></a>파이썬에서 op를 사용하기 위한 방법</h1><p>TensorFlow Python API는 tf.load_op_library동적 라이브러리를로드하고 op를 TensorFlow 프레임 워크에 등록하는 기능을 제공합니다.<br>load_op_libraryop와 커널을 위한 파이썬 래퍼를 포함하는 파이썬 모듈을 리턴합니다.<br>따라서 일단 op를 빌드하면 다음을 수행하여 Python에서 실행할 수 있습니다.<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div></pre></td><td class="code"><pre><div class="line">import tensorflow as tf</div><div class="line">zero_out_module = tf.load_op_library(&apos;zero_out.so&apos;)</div><div class="line">with tf.Session(&apos;&apos;):</div><div class="line">  zero_out_module.zero_out([[1, 2], [3, 4]]).eval()</div><div class="line"></div><div class="line"># Prints</div><div class="line">array([[1, 0], [0, 0]], dtype=int32)</div></pre></td></tr></table></figure></p>
+<p>참고로 snake_name case가 되기 때문에 op의 이름이 C++에서 ZeroOut이었다면, 파이썬에서는 zero_out이 됩니다.</p>
+<h1 id="테스트"><a href="#테스트" class="headerlink" title="테스트"></a>테스트</h1><p>성공적으로 op를 구현했는지 확인하는 좋은 방법은 테스트를 작성하는 것입니다.<br>다음 내용으로 zero_out_op_test.py 파일 을 만듭니다 .<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div></pre></td><td class="code"><pre><div class="line">import tensorflow as tf</div><div class="line"></div><div class="line">class ZeroOutTest(tf.test.TestCase):</div><div class="line">  def testZeroOut(self):</div><div class="line">    zero_out_module = tf.load_op_library(&apos;zero_out.so&apos;)</div><div class="line">    with self.test_session():</div><div class="line">      result = zero_out_module.zero_out([5, 4, 3, 2, 1])</div><div class="line">      self.assertAllEqual(result.eval(), [5, 0, 0, 0, 0])</div><div class="line"></div><div class="line">if __name__ == &quot;__main__&quot;:</div><div class="line">  tf.test.main()</div></pre></td></tr></table></figure></p>
+<p>그런 다음 테스트를 실행하십시오 (tensorflow가 설치되어 있다고 가정).<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">python zero_out_op_test.py</div></pre></td></tr></table></figure></p>
+<h1 id="그런데-이대로-되시나요"><a href="#그런데-이대로-되시나요" class="headerlink" title="그런데 이대로 되시나요??"></a>그런데 이대로 되시나요??</h1><p>지금 op customizing 부분에 심각한 오류가 있는 것 같습니다.<br>bazel을 이용해서 op customizing을 하는 부분은 현재 오류가 있어서 안되는 것 같더군요.<br>그래서 g++로 다시 빌드를 해보았습니다.<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div></pre></td><td class="code"><pre><div class="line"># 홈디렉토리에서</div><div class="line">TF_INC=$(python -c &apos;import tensorflow as tf; print(tf.sysconfig.get_include())&apos;)</div><div class="line"># tensorflow/tensorflow/core/uer_ops 경로에서</div><div class="line">g++ -std=c++11 -shared zero_out.cc -o zero_out.so -fPIC -I $TF_INC -O2</div></pre></td></tr></table></figure></p>
+<p>자, 이렇게 빌드를 했더니 zero_out.so 파일이 해당 경로에 생겼습니다.<br>다시 파일로 돌아갔습니다.<br>그리고 path를 잘 못알아들어서 수동으로 다시 코드를 짜주었습니다.<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div></pre></td><td class="code"><pre><div class="line">import os.path</div><div class="line">import tensorflow as tf</div><div class="line">zero_out_module = tf.load_op_library(&apos;zero_out.so가 있는 경로 전부 루트부터 입력&apos;)</div><div class="line">sess = tf.Session()</div><div class="line">print (sess.run(zero_out_module.zero_out([[1,2], [3,4]])))</div></pre></td></tr></table></figure></p>
+<p>자, 이제 정상 작동을 합니다.</p>
+<p>이것으로 user customizing op를 텐서플로우에 추가하는 방법에 대한 설명을 마치겠습니다.</p>
+
+        </div>
+        <footer class="article-footer">
+            
+
+
+
+    <a data-url="https://deeptensorflow.github.io/2017/02/21/add-new-operation-on-tensorflow/" data-id="cizoxxonw0004muhsowxwrhk3" class="article-share-link"><i class="fa fa-share"></i>Share</a>
+<script>
+    (function ($) {
+        $('body').on('click', function() {
+            $('.article-share-box.on').removeClass('on');
+        }).on('click', '.article-share-link', function(e) {
+            e.stopPropagation();
+
+            var $this = $(this),
+                url = $this.attr('data-url'),
+                encodedUrl = encodeURIComponent(url),
+                id = 'article-share-box-' + $this.attr('data-id'),
+                offset = $this.offset(),
+                box;
+
+            if ($('#' + id).length) {
+                box = $('#' + id);
+
+                if (box.hasClass('on')){
+                    box.removeClass('on');
+                    return;
+                }
+            } else {
+                var html = [
+                    '<div id="' + id + '" class="article-share-box">',
+                        '<input class="article-share-input" value="' + url + '">',
+                        '<div class="article-share-links">',
+                            '<a href="https://twitter.com/intent/tweet?url=' + encodedUrl + '" class="article-share-twitter" target="_blank" title="Twitter"></a>',
+                            '<a href="https://www.facebook.com/sharer.php?u=' + encodedUrl + '" class="article-share-facebook" target="_blank" title="Facebook"></a>',
+                            '<a href="http://pinterest.com/pin/create/button/?url=' + encodedUrl + '" class="article-share-pinterest" target="_blank" title="Pinterest"></a>',
+                            '<a href="https://plus.google.com/share?url=' + encodedUrl + '" class="article-share-google" target="_blank" title="Google+"></a>',
+                        '</div>',
+                    '</div>'
+                ].join('');
+
+              box = $(html);
+
+              $('body').append(box);
+            }
+
+            $('.article-share-box.on').hide();
+
+            box.css({
+                top: offset.top + 25,
+                left: offset.left
+            }).addClass('on');
+
+        }).on('click', '.article-share-box', function (e) {
+            e.stopPropagation();
+        }).on('click', '.article-share-box-input', function () {
+            $(this).select();
+        }).on('click', '.article-share-box-link', function (e) {
+            e.preventDefault();
+            e.stopPropagation();
+
+            window.open(this.href, 'article-share-box-window-' + Date.now(), 'width=500,height=450');
+        });
+    })(jQuery);
+</script>
+
+        </footer>
+    </div>
+</article>
+
+    <section id="comments">
+    
+        
+    <div id="disqus_thread">
+        <noscript>Please enable JavaScript to view the <a href="//disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+    </div>
+
+    
+    </section>
+
+
+                        </div>
+                    </section>
+                    <aside id="sidebar">
+    <a class="sidebar-toggle" title="Expand Sidebar"><i class="toggle icon"></i></a>
+    <div class="sidebar-top">
+        <p>follow:</p>
+        <ul class="social-links">
+            
+                
+                <li>
+                    <a class="social-tooltip" title="internet-explorer" href="http://blog.naver.com/deeptensorflow/" target="_blank" rel="external nofollow noopener noreferrer">
+                        <i class="icon fa fa-internet-explorer"></i>
+                    </a>
+                </li>
+                
+            
+                
+                <li>
+                    <a class="social-tooltip" title="twitter" href="https://twitter.com/deeptensorflow/" target="_blank" rel="external nofollow noopener noreferrer">
+                        <i class="icon fa fa-twitter"></i>
+                    </a>
+                </li>
+                
+            
+                
+                <li>
+                    <a class="social-tooltip" title="facebook" href="https://www.facebook.com/deeptensorflow/" target="_blank" rel="external nofollow noopener noreferrer">
+                        <i class="icon fa fa-facebook"></i>
+                    </a>
+                </li>
+                
+            
+                
+                <li>
+                    <a class="social-tooltip" title="github" href="https://github.com/deeptensorflow/" target="_blank" rel="external nofollow noopener noreferrer">
+                        <i class="icon fa fa-github"></i>
+                    </a>
+                </li>
+                
+            
+                
+                <li>
+                    <a class="social-tooltip" title="rss" href="/feed.xml" target="_blank">
+                        <i class="icon fa fa-rss"></i>
+                    </a>
+                </li>
+                
+            
+        </ul>
+    </div>
+    <div class="github-card" data-github="deeptensorflow" data-width="" data-height="" data-theme="default"></div>
+    <script src="//cdn.jsdelivr.net/github-cards/latest/widget.js"></script>
+    
+        
+<nav id="article-nav">
+    
+        <a href="/2017/02/27/tensorflow-tasting/" id="article-nav-newer" class="article-nav-link-wrap">
+        <strong class="article-nav-caption">newer</strong>
+        <p class="article-nav-title">
+        
+            텐서플로우 맛보기(기본 가이드)
+        
+        </p>
+        <i class="icon fa fa-chevron-right" id="icon-chevron-right"></i>
+    </a>
+    
+    
+        <a href="/2017/02/21/tensorflow-architecture-feature/" id="article-nav-older" class="article-nav-link-wrap">
+        <strong class="article-nav-caption">older</strong>
+        <p class="article-nav-title">텐서플로우 내부 구조에 대해 알아보자</p>
+        <i class="icon fa fa-chevron-left" id="icon-chevron-left"></i>
+        </a>
+    
+</nav>
+
+    
+    <div class="widgets-container">
+        <div class="widgets-wrap"><img src="https://deeptensorflow.github.io/images/kookminuv.png" style="width: 100%"> <div style="padding: 2px 16px; background-color: #effbfc">
+    <h4><b>김명수</b></h4>
+    <p>국민대학교 컴퓨터공학부 3학년</p>
+    <p>소속: 임은진교수님 연구실</p>
+    <p>지원: 경주현 연구원</p>
+    <p>서버 컴퓨터: 120-core (8 sockets × 15cores) Intel Xeon E7-8870</p>
+    <p>연구: Large-scale 또는 Many-core 시스템을 위한 텐서플로우의 내부 구조파악 및 연구</p>
+  </div></div>
+        
+            
+                
+    <div class="widget-wrap">
+        <h3 class="widget-title">recents</h3>
+        <div class="widget">
+            <ul id="recent-post" class="">
+                
+                    <li>
+                        
+                        <div class="item-thumbnail">
+                            <a href="/2017/02/28/mnist-for-beginners/" class="thumbnail">
+    
+    
+        <span style="background-image:url(https://deeptensorflow.github.io/images/logo.png)" alt="초보자를 위한 MNIST(텐서플로우)" class="thumbnail-image"></span>
+    
+    
+</a>
+
+                        </div>
+                        
+                        <div class="item-inner">
+                            <p class="item-category"><a class="article-category-link" href="/categories/TensorFlow/">TensorFlow</a><i class="icon fa fa-angle-right"></i><a class="article-category-link" href="/categories/TensorFlow/App/">App</a></p>
+                            <p class="item-title"><a href="/2017/02/28/mnist-for-beginners/" class="title">초보자를 위한 MNIST(텐서플로우)</a></p>
+                            <p class="item-date"><time datetime="2017-02-28T00:17:40.000Z" itemprop="datePublished">2017-02-28</time></p>
+                        </div>
+                    </li>
+                
+                    <li>
+                        
+                        <div class="item-thumbnail">
+                            <a href="/2017/02/27/tensorflow-tasting/" class="thumbnail">
+    
+    
+        <span style="background-image:url(https://deeptensorflow.github.io/images/logo.png)" alt="텐서플로우 맛보기(기본 가이드)" class="thumbnail-image"></span>
+    
+    
+</a>
+
+                        </div>
+                        
+                        <div class="item-inner">
+                            <p class="item-category"><a class="article-category-link" href="/categories/Tensorflow/">Tensorflow</a><i class="icon fa fa-angle-right"></i><a class="article-category-link" href="/categories/Tensorflow/App/">App</a></p>
+                            <p class="item-title"><a href="/2017/02/27/tensorflow-tasting/" class="title">텐서플로우 맛보기(기본 가이드)</a></p>
+                            <p class="item-date"><time datetime="2017-02-26T23:35:14.000Z" itemprop="datePublished">2017-02-27</time></p>
+                        </div>
+                    </li>
+                
+                    <li>
+                        
+                        <div class="item-thumbnail">
+                            <a href="/2017/02/21/add-new-operation-on-tensorflow/" class="thumbnail">
+    
+    
+        <span style="background-image:url(https://deeptensorflow.github.io/images/logo.png)" alt="텐서플로우에 새로운 연산 추가하기(커스터마이징)" class="thumbnail-image"></span>
+    
+    
+</a>
+
+                        </div>
+                        
+                        <div class="item-inner">
+                            <p class="item-category"><a class="article-category-link" href="/categories/Tensorflow/">Tensorflow</a><i class="icon fa fa-angle-right"></i><a class="article-category-link" href="/categories/Tensorflow/Internal/">Internal</a></p>
+                            <p class="item-title"><a href="/2017/02/21/add-new-operation-on-tensorflow/" class="title">텐서플로우에 새로운 연산 추가하기(커스터마이징)</a></p>
+                            <p class="item-date"><time datetime="2017-02-21T13:24:53.000Z" itemprop="datePublished">2017-02-21</time></p>
+                        </div>
+                    </li>
+                
+                    <li>
+                        
+                        <div class="item-thumbnail">
+                            <a href="/2017/02/21/tensorflow-architecture-feature/" class="thumbnail">
+    
+    
+        <span style="background-image:url(https://deeptensorflow.github.io/images/tensorflowarchitecture.png)" alt="텐서플로우 내부 구조에 대해 알아보자" class="thumbnail-image"></span>
+    
+    
+</a>
+
+                        </div>
+                        
+                        <div class="item-inner">
+                            <p class="item-category"><a class="article-category-link" href="/categories/Tensorflow/">Tensorflow</a><i class="icon fa fa-angle-right"></i><a class="article-category-link" href="/categories/Tensorflow/Internal/">Internal</a></p>
+                            <p class="item-title"><a href="/2017/02/21/tensorflow-architecture-feature/" class="title">텐서플로우 내부 구조에 대해 알아보자</a></p>
+                            <p class="item-date"><time datetime="2017-02-21T06:33:44.000Z" itemprop="datePublished">2017-02-21</time></p>
+                        </div>
+                    </li>
+                
+                    <li>
+                        
+                        <div class="item-thumbnail">
+                            <a href="/2017/02/21/how-to-build-tensorflow-with-pip/" class="thumbnail">
+    
+    
+        <span style="background-image:url(https://deeptensorflow.github.io/images/bazel.png)" alt="텐서플로우 빌드하는 방법 (텐서플로우에 내코드 추가하기)" class="thumbnail-image"></span>
+    
+    
+</a>
+
+                        </div>
+                        
+                        <div class="item-inner">
+                            <p class="item-category"><a class="article-category-link" href="/categories/Tensorflow/">Tensorflow</a><i class="icon fa fa-angle-right"></i><a class="article-category-link" href="/categories/Tensorflow/Internal/">Internal</a></p>
+                            <p class="item-title"><a href="/2017/02/21/how-to-build-tensorflow-with-pip/" class="title">텐서플로우 빌드하는 방법 (텐서플로우에 내코드 추가하기)</a></p>
+                            <p class="item-date"><time datetime="2017-02-21T00:47:00.000Z" itemprop="datePublished">2017-02-21</time></p>
+                        </div>
+                    </li>
+                
+            </ul>
+        </div>
+    </div>
+
+            
+                
+    <div class="widget-wrap widget-list">
+        <h3 class="widget-title">categories</h3>
+        <div class="widget">
+            <ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="/categories/Machinelearning/">Machinelearning</a><span class="category-list-count">3</span><ul class="category-list-child"><li class="category-list-item"><a class="category-list-link" href="/categories/Machinelearning/Lecture/">Lecture</a><span class="category-list-count">1</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Machinelearning/News/">News</a><span class="category-list-count">2</span></li></ul></li><li class="category-list-item"><a class="category-list-link" href="/categories/TensorFlow/">TensorFlow</a><span class="category-list-count">1</span><ul class="category-list-child"><li class="category-list-item"><a class="category-list-link" href="/categories/TensorFlow/App/">App</a><span class="category-list-count">1</span></li></ul></li><li class="category-list-item"><a class="category-list-link" href="/categories/Tensorflow/">Tensorflow</a><span class="category-list-count">7</span><ul class="category-list-child"><li class="category-list-item"><a class="category-list-link" href="/categories/Tensorflow/App/">App</a><span class="category-list-count">4</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Tensorflow/Internal/">Internal</a><span class="category-list-count">3</span></li></ul></li></ul>
+        </div>
+    </div>
+
+
+            
+                
+    <div class="widget-wrap widget-list">
+        <h3 class="widget-title">archives</h3>
+        <div class="widget">
+            <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/02/">February 2017</a><span class="archive-list-count">11</span></li></ul>
+        </div>
+    </div>
+
+
+            
+                
+    <div class="widget-wrap widget-list">
+        <h3 class="widget-title">tags</h3>
+        <div class="widget">
+            <ul class="tag-list"><li class="tag-list-item"><a class="tag-list-link" href="/tags/MNIST/">MNIST</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/algorithm/">algorithm</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/bazel/">bazel</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/build/">build</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/install/">install</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/internal/">internal</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/lecture/">lecture</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/linearregression/">linearregression</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/machinelearning/">machinelearning</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/tensorflow/">tensorflow</a><span class="tag-list-count">8</span></li></ul>
+        </div>
+    </div>
+
+
+            
+                
+    <div class="widget-wrap widget-float">
+        <h3 class="widget-title">tag cloud</h3>
+        <div class="widget tagcloud">
+            <a href="/tags/MNIST/" style="font-size: 10px;">MNIST</a> <a href="/tags/algorithm/" style="font-size: 10px;">algorithm</a> <a href="/tags/bazel/" style="font-size: 10px;">bazel</a> <a href="/tags/build/" style="font-size: 13.33px;">build</a> <a href="/tags/install/" style="font-size: 13.33px;">install</a> <a href="/tags/internal/" style="font-size: 16.67px;">internal</a> <a href="/tags/lecture/" style="font-size: 10px;">lecture</a> <a href="/tags/linearregression/" style="font-size: 10px;">linearregression</a> <a href="/tags/machinelearning/" style="font-size: 16.67px;">machinelearning</a> <a href="/tags/tensorflow/" style="font-size: 20px;">tensorflow</a>
+        </div>
+    </div>
+
+
+            
+                
+    <div class="widget-wrap widget-list">
+        <h3 class="widget-title">links</h3>
+        <div class="widget">
+            <ul>
+                
+                    <li>
+                        <a href="http://hexo.io/" rel="external nofollow noopener noreferrer" target="_blank">Hexo</a>
+                    </li>
+                
+                    <li>
+                        <a href="https://www.tensorflow.org/" rel="external nofollow noopener noreferrer" target="_blank">Tensorflow</a>
+                    </li>
+                
+                    <li>
+                        <a href="http://www.kookmin.ac.kr/home.php" rel="external nofollow noopener noreferrer" target="_blank">KookminUniversity</a>
+                    </li>
+                
+            </ul>
+        </div>
+    </div>
+
+
+            
+        
+    </div>
+</aside>
+
+                </div>
+            </div>
+        </div>
+        <footer id="footer">
+    <div class="container">
+        <div class="container-inner">
+            <a id="back-to-top" href="javascript:;"><i class="icon fa fa-angle-up"></i></a>
+            <div class="credit">
+                <h1 class="logo-wrap">
+                    <a href="/" class="logo"></a>
+                </h1>
+                <p>&copy; 2017 MyeongsooKim</p>
+                <p>Powered by <a href="//hexo.io/" target="_blank">Hexo</a>. Theme by <a href="//github.com/ppoffice" target="_blank">PPOffice</a></p>
+            </div>
+        </div>
+    </div>
+</footer>
+        
+    
+    <script>
+    var disqus_shortname = 'deeptensorflow';
+    
+    
+    var disqus_url = 'https://deeptensorflow.github.io/2017/02/21/add-new-operation-on-tensorflow/';
+    
+    (function() {
+    var dsq = document.createElement('script');
+    dsq.type = 'text/javascript';
+    dsq.async = true;
+    dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+    (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    })();
+    </script>
+
+
+
+
+    
+        <script src="/libs/lightgallery/js/lightgallery.min.js"></script>
+        <script src="/libs/lightgallery/js/lg-thumbnail.min.js"></script>
+        <script src="/libs/lightgallery/js/lg-pager.min.js"></script>
+        <script src="/libs/lightgallery/js/lg-autoplay.min.js"></script>
+        <script src="/libs/lightgallery/js/lg-fullscreen.min.js"></script>
+        <script src="/libs/lightgallery/js/lg-zoom.min.js"></script>
+        <script src="/libs/lightgallery/js/lg-hash.min.js"></script>
+        <script src="/libs/lightgallery/js/lg-share.min.js"></script>
+        <script src="/libs/lightgallery/js/lg-video.min.js"></script>
+    
+
+
+<!-- Custom Scripts -->
+<script src="/js/main.js"></script>
+
+    </div>
+</body>
+

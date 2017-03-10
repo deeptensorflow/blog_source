@@ -1,0 +1,637 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    
+    <title>선형회귀란 무엇을까? 텐서플로우를 통해 알아보자(linear regression) | Tensorflow Internal</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    
+        <meta name="keywords" content="tensorflow,linearregression">
+    
+
+      
+
+            <meta name="description" content="선형회귀(linear regression)
+위키백과
+
+선형회귀란  종속 변수 y와 한 개 이상의 독립 변수 (또는 설명 변수) X와의 선형 상관 관계를 모델링하는 회귀분석 기법입니다.한 개의 설명 변수에 기반한 경우에는 단순 선형 회귀, 둘 이상의 설명 변수에 기반한 경우에는 다중 선형 회귀라고 합니다.
+
+쉽게 설명하자면…
+
+어떤사람은 2시간 공부해서 시험">
+<meta property="og:type" content="article">
+<meta property="og:title" content="선형회귀란 무엇을까? 텐서플로우를 통해 알아보자(linear regression)">
+<meta property="og:url" content="https://deeptensorflow.github.io/2017/02/19/what-is-linear-regression-with-tensorflow/index.html">
+<meta property="og:site_name" content="Tensorflow Internal">
+<meta property="og:description" content="선형회귀(linear regression)
+위키백과
+
+선형회귀란  종속 변수 y와 한 개 이상의 독립 변수 (또는 설명 변수) X와의 선형 상관 관계를 모델링하는 회귀분석 기법입니다.한 개의 설명 변수에 기반한 경우에는 단순 선형 회귀, 둘 이상의 설명 변수에 기반한 경우에는 다중 선형 회귀라고 합니다.
+
+쉽게 설명하자면…
+
+어떤사람은 2시간 공부해서 시험">
+<meta property="og:image" content="https://deeptensorflow.github.io/images/linear_regression.png">
+<meta property="og:updated_time" content="2017-02-19T06:22:35.000Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="선형회귀란 무엇을까? 텐서플로우를 통해 알아보자(linear regression)">
+<meta name="twitter:description" content="선형회귀(linear regression)
+위키백과
+
+선형회귀란  종속 변수 y와 한 개 이상의 독립 변수 (또는 설명 변수) X와의 선형 상관 관계를 모델링하는 회귀분석 기법입니다.한 개의 설명 변수에 기반한 경우에는 단순 선형 회귀, 둘 이상의 설명 변수에 기반한 경우에는 다중 선형 회귀라고 합니다.
+
+쉽게 설명하자면…
+
+어떤사람은 2시간 공부해서 시험">
+<meta name="twitter:image" content="https://deeptensorflow.github.io/images/linear_regression.png">
+<meta name="twitter:creator" content="@deeptensorflow">
+<link rel="publisher" href="deeptensorflow">
+<meta property="fb:admins" content="399789273734884">
+<meta property="fb:app_id" content="399789273734884">
+    
+
+    
+    <link rel="canonical" href="https://deeptensorflow.github.io/2017/02/19/what-is-linear-regression-with-tensorflow/">
+    
+        <link rel="alternate" href="/feed.xml" title="Tensorflow Internal" type="application/atom+xml">
+    
+
+    
+        <link rel="icon" href="https://deeptensorflow.github.io/images/favicon.ico">
+    
+
+    <link rel="stylesheet" href="/libs/font-awesome/css/font-awesome.min.css">
+    <link rel="stylesheet" href="/libs/titillium-web/styles.css">
+    <link rel="stylesheet" href="/libs/source-code-pro/styles.css">
+
+    <link rel="stylesheet" href="/css/style.css">
+
+    <script src="/libs/jquery/2.0.3/jquery.min.js"></script>
+    
+    
+        <link rel="stylesheet" href="/libs/lightgallery/css/lightgallery.min.css">
+    
+    
+        <script type="text/javascript">
+(function(i,s,o,g,r,a,m) {i['GoogleAnalyticsObject']=r;i[r]=i[r]||function() {
+(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+})(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+ga('create', 'UA-92230405-1', 'auto');
+ga('send', 'pageview');
+
+</script>
+    
+    
+
+</head>
+</html>
+<body>
+    <div id="wrap">
+        <header id="header">
+    <div id="header-outer" class="outer">
+        <div class="container">
+            <div class="container-inner">
+                <div id="header-title">
+                    <h1 class="logo-wrap">
+                        <a href="/" class="logo"></a>
+                    </h1>
+                    
+                        <h2 class="subtitle-wrap">
+                            <p class="subtitle">All about tensorflow</p>
+                        </h2>
+                    
+                </div>
+                <div id="header-inner" class="nav-container">
+                    <a id="main-nav-toggle" class="nav-icon fa fa-bars"></a>
+                    <div class="nav-container-inner">
+                        <ul id="main-nav">
+                            
+                                <li class="main-nav-list-item">
+                                    <a class="main-nav-list-link" href="/">Home</a>
+                                </li>
+                            
+                                        <ul class="main-nav-list"><li class="main-nav-list-item"><a class="main-nav-list-link" href="/categories/Machinelearning/">Machinelearning</a><ul class="main-nav-list-child"><li class="main-nav-list-item"><a class="main-nav-list-link" href="/categories/Machinelearning/Lecture/">Lecture</a></li><li class="main-nav-list-item"><a class="main-nav-list-link" href="/categories/Machinelearning/News/">News</a></li></ul></li><li class="main-nav-list-item"><a class="main-nav-list-link" href="/categories/TensorFlow/">TensorFlow</a><ul class="main-nav-list-child"><li class="main-nav-list-item"><a class="main-nav-list-link" href="/categories/TensorFlow/App/">App</a></li></ul></li><li class="main-nav-list-item"><a class="main-nav-list-link" href="/categories/Tensorflow/">Tensorflow</a><ul class="main-nav-list-child"><li class="main-nav-list-item"><a class="main-nav-list-link" href="/categories/Tensorflow/App/">App</a></li><li class="main-nav-list-item"><a class="main-nav-list-link" href="/categories/Tensorflow/Internal/">Internal</a></li></ul></li></ul>
+                                    
+                        </ul>
+                        <nav id="sub-nav">
+                            <div id="search-form-wrap">
+
+    <form class="search-form">
+        <input type="text" class="ins-search-input search-form-input" placeholder="Search">
+        <button type="submit" class="search-form-submit"></button>
+    </form>
+    <div class="ins-search">
+    <div class="ins-search-mask"></div>
+    <div class="ins-search-container">
+        <div class="ins-input-wrapper">
+            <input type="text" class="ins-search-input" placeholder="Type something...">
+            <span class="ins-close ins-selectable"><i class="fa fa-times-circle"></i></span>
+        </div>
+        <div class="ins-section-wrapper">
+            <div class="ins-section-container"></div>
+        </div>
+    </div>
+</div>
+<script>
+(function (window) {
+    var INSIGHT_CONFIG = {
+        TRANSLATION: {
+            POSTS: 'Posts',
+            PAGES: 'Pages',
+            CATEGORIES: 'Categories',
+            TAGS: 'Tags',
+            UNTITLED: '(Untitled)',
+        },
+        ROOT_URL: '/',
+        CONTENT_URL: '/content.json',
+    };
+    window.INSIGHT_CONFIG = INSIGHT_CONFIG;
+})(window);
+</script>
+<script src="/js/insight.js"></script>
+
+</div>
+                        </nav>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</header>
+        <div class="container">
+            <div class="main-body container-inner">
+                <div class="main-body-inner">
+                    <section id="main">
+                        <div class="main-body-header">
+    <h1 class="header">
+    
+    <a class="page-title-link" href="/categories/Tensorflow/">Tensorflow</a><i class="icon fa fa-angle-right"></i><a class="page-title-link" href="/categories/Tensorflow/App/">App</a>
+    </h1>
+</div>
+                        <div class="main-body-content">
+                            <article id="post-what-is-linear-regression-with-tensorflow" class="article article-single article-type-post" itemscope="" itemprop="blogPost">
+    <div class="article-inner">
+        
+            <header class="article-header">
+                
+    
+        <h1 class="article-title" itemprop="name">
+        선형회귀란 무엇을까? 텐서플로우를 통해 알아보자(linear regression)
+        </h1>
+    
+
+            </header>
+        
+        
+            <div class="article-subtitle">
+                <a href="/2017/02/19/what-is-linear-regression-with-tensorflow/" class="article-date">
+    <time datetime="2017-02-19T04:44:28.000Z" itemprop="datePublished">2017-02-19</time>
+</a>
+                
+    <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/linearregression/">linearregression</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/tensorflow/">tensorflow</a></li></ul>
+
+            </div>
+        
+        
+        <div class="article-entry" itemprop="articleBody">
+            <h1 id="선형회귀-linear-regression"><a href="#선형회귀-linear-regression" class="headerlink" title="선형회귀(linear regression)"></a>선형회귀(linear regression)</h1><ul>
+<li>위키백과</li>
+</ul>
+<p>선형회귀란  종속 변수 y와 한 개 이상의 독립 변수 (또는 설명 변수) X와의 선형 상관 관계를 모델링하는 회귀분석 기법입니다.<br>한 개의 설명 변수에 기반한 경우에는 단순 선형 회귀, 둘 이상의 설명 변수에 기반한 경우에는 다중 선형 회귀라고 합니다.</p>
+<ul>
+<li>쉽게 설명하자면…</li>
+</ul>
+<p>어떤사람은 2시간 공부해서 시험점수를 30점을 받았습니다.<br>어떤사람은 3시간 공부해서 40점을, 어떤사람은 4시간 공부해서 50점을 받았습니다.<br>이럴 경우에 공부시간과 시험점수 사이에 어떤 관계가 있는지 알아보고 싶겠죠?<br>이럴 때 자주 쓰이는 기법이 선형 회귀입니다.<br>그리고 더 세분화 하자면 결과에 미치는 요인이 한개이기 때문에 단순 선형 회귀라고 부릅니다.<br>단순한 공부시간 뿐만 아니라 학교의 출석율도 한번 설명 변수로 넣어보겠습니다.<br>어떤 사람은 2시간을 공부하고 학교에 5번 출석을 해서 20점을 받았습니다.<br>어떤 사람은 2시간을 공부하고 학교에 10번을 출석해서 30점을 받았구요!<br>어떤 사람은 5시간을 공부하고 학교에 20번을 출석해서 50점을 받았다고 가정하겠습니다.<br>공부시간, 학교 출석율이 시험점수에 얼마나 영향을 미치는지 궁금하죠?<br>이럴때 자주 쓰이는 기법이 선형 회귀입니다.<br>더 세분화 하자면 설명 변수가 둘 이상이니 다중 선형 회귀라고 합니다.</p>
+<ul>
+<li>방정식으로 알아보자</li>
+</ul>
+<p>위의 경우에 아래의 방정식이 세워지죠?<br>Y(시험점수) = x1(공부한시간) <em> w1(공부시간과 시험점수의 상관계수) + x2(학교 출석율) </em> w2(학교 출석율과 시험점수의 상관계수) + b(보정값)<br>요약하자면 Y = x1<em>w1 +x2</em>w2 + b 입니다.<br>중학교 때 많이 본 함수이지요?<br>이런 모델을 써서 설명변수(x1, x2)와 종속변수(Y)의 상관관계를 알고자 하는 방법인 것입니다.</p>
+<ul>
+<li>텐서플로우로 단순 선형 회귀에 대해 알아보자</li>
+</ul>
+<p>일부러 상관관계를 알기 쉽도록 눈에 보이는 모델을 써봤습니다.<br>공부시간이 1, 2, 3시간일때 시험 점수가 2, 4, 6점이라면?<br>Y = x1*w1 + b의 모델이 짜질 것입니다.<br>그리고 w1은 2, b는 0이 되어야 주어진 방정식을 만족할 것이라는 것을 우리는 알 수 있죠.<br>한번 텐서플로우 코드로 확인해 보겠습니다.</p>
+<figure class="highlight plain"><figcaption><span>tf_linear_regression</span></figcaption><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div><div class="line">33</div><div class="line">34</div><div class="line">35</div><div class="line">36</div><div class="line">37</div><div class="line">38</div><div class="line">39</div><div class="line">40</div><div class="line">41</div><div class="line">42</div><div class="line">43</div></pre></td><td class="code"><pre><div class="line"># 텐서플로우를 사용할 것을 알려줍니다.</div><div class="line">import tensorflow as tf</div><div class="line"></div><div class="line"># x_data는 공부시간, y_data는 시험성적 입니다.</div><div class="line">x_data = [1, 2, 3]</div><div class="line">y_data = [2, 4, 6]</div><div class="line"></div><div class="line"># W는 설명변수, b는 보정값 입니다.</div><div class="line">W = tf.Variable(tf.random_uniform([1], -1.0, 1.0))</div><div class="line">b = tf.Variable(tf.random_uniform([1], -1.0, 1.0))</div><div class="line"></div><div class="line"># placeholder를 사용하면 변수의 형태만 지정해주고 나중에 값을 넣어줘도 됩니다.</div><div class="line">X = tf.placeholder(tf.float32)</div><div class="line">Y = tf.placeholder(tf.float32)</div><div class="line"></div><div class="line"># 방정식 모델입니다.</div><div class="line">hypothesis = W * X + b</div><div class="line"></div><div class="line"># cost 함수입니다. 뒤어서 설명하겠습니다.</div><div class="line">cost = tf.reduce_mean(tf.square(hypothesis - Y))</div><div class="line"></div><div class="line"># Gradient Descent 또한 뒤에서 설명하겠습니다.</div><div class="line">a = tf.Variable(0.1)</div><div class="line">optimizer = tf.train.GradientDescentOptimizer(a)</div><div class="line">train = optimizer.minimize(cost)</div><div class="line"></div><div class="line"># 변수들을 초기화합니다.</div><div class="line">init = tf.global_variables_initializer()</div><div class="line"></div><div class="line"># 텐서플로우를 시작하게 하는 구문이라고 보시면 됩니다. 세션을 지정해줍니다.</div><div class="line">sess = tf.Session()</div><div class="line">sess.run(init)</div><div class="line"></div><div class="line"># X에 x_data를, Y에 y_data를 넣어서 2001번 소스를 돌려가며 W와 b값을 찾아갑니다.</div><div class="line">for step in range(2001):</div><div class="line">    sess.run(train, feed_dict=&#123;X: x_data, Y: y_data&#125;)</div><div class="line">    if step % 200 == 0:</div><div class="line">        print(step, sess.run(cost, feed_dict=&#123;X: x_data, Y: y_data&#125;), sess.run(W), sess.run(b))</div><div class="line"></div><div class="line"># 5시간 공부했을때와 2.5시간 공부했을 때 몇점이 나올지 출력해봅니다.</div><div class="line">print(sess.run(hypothesis, feed_dict=&#123;X: 5&#125;))</div><div class="line">print(sess.run(hypothesis, feed_dict=&#123;X: 2.5&#125;))</div><div class="line"></div></pre></td></tr></table></figure>
+<ul>
+<li>결과입니다.</li>
+</ul>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div></pre></td><td class="code"><pre><div class="line"># 순서대로 몇번째 트레이닝인지, 오차범위, W값, b값 입니다.</div><div class="line">0 0.245183 [ 2.28380156] [-0.13001066]</div><div class="line">200 3.87879e-07 [ 2.00072336] [-0.00164423]</div><div class="line">400 2.25526e-11 [ 2.00000548] [ -1.27652002e-05]</div><div class="line">600 1.51582e-13 [ 2.00000072] [ -1.24958285e-06]</div><div class="line">800 1.51582e-13 [ 2.00000072] [ -1.24958285e-06]</div><div class="line">1000 1.51582e-13 [ 2.00000072] [ -1.24958285e-06]</div><div class="line">1200 1.51582e-13 [ 2.00000072] [ -1.24958285e-06]</div><div class="line">1400 1.51582e-13 [ 2.00000072] [ -1.24958285e-06]</div><div class="line">1600 1.51582e-13 [ 2.00000072] [ -1.24958285e-06]</div><div class="line">1800 1.51582e-13 [ 2.00000072] [ -1.24958285e-06]</div><div class="line">2000 1.51582e-13 [ 2.00000072] [ -1.24958285e-06]</div><div class="line"></div><div class="line"># 5시간 공부했을 때와 2.5시간 공부했을 때를 출력해줍니다.</div><div class="line">[ 10.00000286]</div><div class="line">[ 5.00000048]</div></pre></td></tr></table></figure>
+<ul>
+<li>cost 함수 &amp; gradient descent란?</li>
+</ul>
+<p>김성훈 교수님의 강의가 이것을 이해하는데는 최고 같습니다.<br>아래의 비디오 두편만 보면 이해가 빡!<br><div class="video-container"><iframe src="//www.youtube.com/embed/Hax03rCn3UI" frameborder="0" allowfullscreen></iframe></div><br><div class="video-container"><iframe src="//www.youtube.com/embed/TxIVr-nk1so" frameborder="0" allowfullscreen></iframe></div></p>
+<ul>
+<li>다중 선형 회귀 함수는 어떻게 처리를 할까요?</li>
+</ul>
+<p>다중 선형 회귀함수를 보기 좋게 처리하려면 한가지 아이디어가 필요합니다.<br>행렬의 아이디어가 필요한데요.<br>Y = X1<em>W1 + X2</em>W2 + X3<em>W3 + …. + b 이런 꼴이 선형 회귀 모델인데요.<br>이것을 어떻게 간결하게 표현할 방법이 없을까요?<br>있습니다!<br>Y = X1</em>W1 + X2<em>W2 + X3</em>W3 +… + 1*b의 꼴로 두면 됩니다.<br>그리고 이것을 행렬로 변환!<br><img src="https://deeptensorflow.github.io/images/linear_regression.png" alt="linearregression"><br>요런식으로 행렬로 관리하면 되겠죠?<br>(아, b1, b2, … bn은 전부 같은 값입니다.)<br>그런데 더 간략하게 하고 싶다면 b까지 행렬에 포함시킬 수 있습니다.<br><img src="https://deeptensorflow.github.io/images/multi_linear_regression.png" alt="multi_linearregression"><br>이럴경우에 코드는 어떻게 되냐구요?</p>
+<ul>
+<li>다중 선형 회귀 함수 텐서플로우 예시 코드</li>
+</ul>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div></pre></td><td class="code"><pre><div class="line">import tensorflow as tf</div><div class="line"></div><div class="line">x_data = [[1., 2., 5.],[1., 3., 7.], [1., 4., 10.], [1., 7., 12.]]</div><div class="line">y_data = [1., 2., 3., 4.]</div><div class="line"></div><div class="line">W = tf.Variable(tf.random_uniform([3,1], -1, 1))</div><div class="line"></div><div class="line"># 이거 한줄로 가설함수 끝!</div><div class="line">hypothesis = tf.matmul(x_data, W)</div><div class="line"></div><div class="line">cost = tf.reduce_mean(tf.square(hypothesis - y_data))</div><div class="line"></div><div class="line">a = tf.Variable(0.01)  # learning rate, alpha</div><div class="line">optimizer = tf.train.GradientDescentOptimizer(a)</div><div class="line">train = optimizer.minimize(cost)  # goal is minimize cost</div><div class="line"></div><div class="line">init = tf.global_variables_initializer()</div><div class="line"></div><div class="line">sess = tf.Session()</div><div class="line">sess.run(init)</div><div class="line"></div><div class="line">for step in range(2001):</div><div class="line">    sess.run(train)</div><div class="line">    if step % 200 == 0:</div><div class="line">        print (step, sess.run(cost), sess.run(W))</div></pre></td></tr></table></figure>
+<p>다중 선형 회귀를 이용했는데도(W 2개 b 1개) hypothesis 함수 코드가 엄청 간결하죠?<br>행렬의 위력입니다~ (다들 선형대수 열공을..)<br>참고로 x_data와 y_data에는 별다른 의미 없는 값을 넣었습니다.<br>그냥 소스코드 참고용이라… ㅎ</p>
+<h1 id="결론은"><a href="#결론은" class="headerlink" title="결론은?"></a>결론은?</h1><p>linear regression이 대략적으로 어떤 요인에 미치는 변수들의 패턴을 선형적으로 파악하고자 하는 것이고 tensorflow를 이용하면 쉽게 구현이 가능하다!</p>
+
+        </div>
+        <footer class="article-footer">
+            
+
+
+
+    <a data-url="https://deeptensorflow.github.io/2017/02/19/what-is-linear-regression-with-tensorflow/" data-id="cizoxxoof000fmuhs9anjujja" class="article-share-link"><i class="fa fa-share"></i>Share</a>
+<script>
+    (function ($) {
+        $('body').on('click', function() {
+            $('.article-share-box.on').removeClass('on');
+        }).on('click', '.article-share-link', function(e) {
+            e.stopPropagation();
+
+            var $this = $(this),
+                url = $this.attr('data-url'),
+                encodedUrl = encodeURIComponent(url),
+                id = 'article-share-box-' + $this.attr('data-id'),
+                offset = $this.offset(),
+                box;
+
+            if ($('#' + id).length) {
+                box = $('#' + id);
+
+                if (box.hasClass('on')){
+                    box.removeClass('on');
+                    return;
+                }
+            } else {
+                var html = [
+                    '<div id="' + id + '" class="article-share-box">',
+                        '<input class="article-share-input" value="' + url + '">',
+                        '<div class="article-share-links">',
+                            '<a href="https://twitter.com/intent/tweet?url=' + encodedUrl + '" class="article-share-twitter" target="_blank" title="Twitter"></a>',
+                            '<a href="https://www.facebook.com/sharer.php?u=' + encodedUrl + '" class="article-share-facebook" target="_blank" title="Facebook"></a>',
+                            '<a href="http://pinterest.com/pin/create/button/?url=' + encodedUrl + '" class="article-share-pinterest" target="_blank" title="Pinterest"></a>',
+                            '<a href="https://plus.google.com/share?url=' + encodedUrl + '" class="article-share-google" target="_blank" title="Google+"></a>',
+                        '</div>',
+                    '</div>'
+                ].join('');
+
+              box = $(html);
+
+              $('body').append(box);
+            }
+
+            $('.article-share-box.on').hide();
+
+            box.css({
+                top: offset.top + 25,
+                left: offset.left
+            }).addClass('on');
+
+        }).on('click', '.article-share-box', function (e) {
+            e.stopPropagation();
+        }).on('click', '.article-share-box-input', function () {
+            $(this).select();
+        }).on('click', '.article-share-box-link', function (e) {
+            e.preventDefault();
+            e.stopPropagation();
+
+            window.open(this.href, 'article-share-box-window-' + Date.now(), 'width=500,height=450');
+        });
+    })(jQuery);
+</script>
+
+        </footer>
+    </div>
+</article>
+
+    <section id="comments">
+    
+        
+    <div id="disqus_thread">
+        <noscript>Please enable JavaScript to view the <a href="//disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+    </div>
+
+    
+    </section>
+
+
+                        </div>
+                    </section>
+                    <aside id="sidebar">
+    <a class="sidebar-toggle" title="Expand Sidebar"><i class="toggle icon"></i></a>
+    <div class="sidebar-top">
+        <p>follow:</p>
+        <ul class="social-links">
+            
+                
+                <li>
+                    <a class="social-tooltip" title="internet-explorer" href="http://blog.naver.com/deeptensorflow/" target="_blank" rel="external nofollow noopener noreferrer">
+                        <i class="icon fa fa-internet-explorer"></i>
+                    </a>
+                </li>
+                
+            
+                
+                <li>
+                    <a class="social-tooltip" title="twitter" href="https://twitter.com/deeptensorflow/" target="_blank" rel="external nofollow noopener noreferrer">
+                        <i class="icon fa fa-twitter"></i>
+                    </a>
+                </li>
+                
+            
+                
+                <li>
+                    <a class="social-tooltip" title="facebook" href="https://www.facebook.com/deeptensorflow/" target="_blank" rel="external nofollow noopener noreferrer">
+                        <i class="icon fa fa-facebook"></i>
+                    </a>
+                </li>
+                
+            
+                
+                <li>
+                    <a class="social-tooltip" title="github" href="https://github.com/deeptensorflow/" target="_blank" rel="external nofollow noopener noreferrer">
+                        <i class="icon fa fa-github"></i>
+                    </a>
+                </li>
+                
+            
+                
+                <li>
+                    <a class="social-tooltip" title="rss" href="/feed.xml" target="_blank">
+                        <i class="icon fa fa-rss"></i>
+                    </a>
+                </li>
+                
+            
+        </ul>
+    </div>
+    <div class="github-card" data-github="deeptensorflow" data-width="" data-height="" data-theme="default"></div>
+    <script src="//cdn.jsdelivr.net/github-cards/latest/widget.js"></script>
+    
+        
+<nav id="article-nav">
+    
+        <a href="/2017/02/19/why-use-sigmoid-and-what-is-logistic-classification/" id="article-nav-newer" class="article-nav-link-wrap">
+        <strong class="article-nav-caption">newer</strong>
+        <p class="article-nav-title">
+        
+            시그모이드 함수는 왜 쓰일까? logistic regression, softmax regression
+        
+        </p>
+        <i class="icon fa fa-chevron-right" id="icon-chevron-right"></i>
+    </a>
+    
+    
+        <a href="/2017/02/19/how-to-handle-tensorflow1-error/" id="article-nav-older" class="article-nav-link-wrap">
+        <strong class="article-nav-caption">older</strong>
+        <p class="article-nav-title">텐서플로우1.0 설치시 일어나는 기본 오류를 잡아보자 (bazel로 소스코드 빌드)</p>
+        <i class="icon fa fa-chevron-left" id="icon-chevron-left"></i>
+        </a>
+    
+</nav>
+
+    
+    <div class="widgets-container">
+        <div class="widgets-wrap"><img src="https://deeptensorflow.github.io/images/kookminuv.png" style="width: 100%"> <div style="padding: 2px 16px; background-color: #effbfc">
+    <h4><b>김명수</b></h4>
+    <p>국민대학교 컴퓨터공학부 3학년</p>
+    <p>소속: 임은진교수님 연구실</p>
+    <p>지원: 경주현 연구원</p>
+    <p>서버 컴퓨터: 120-core (8 sockets × 15cores) Intel Xeon E7-8870</p>
+    <p>연구: Large-scale 또는 Many-core 시스템을 위한 텐서플로우의 내부 구조파악 및 연구</p>
+  </div></div>
+        
+            
+                
+    <div class="widget-wrap">
+        <h3 class="widget-title">recents</h3>
+        <div class="widget">
+            <ul id="recent-post" class="">
+                
+                    <li>
+                        
+                        <div class="item-thumbnail">
+                            <a href="/2017/02/28/mnist-for-beginners/" class="thumbnail">
+    
+    
+        <span style="background-image:url(https://deeptensorflow.github.io/images/logo.png)" alt="초보자를 위한 MNIST(텐서플로우)" class="thumbnail-image"></span>
+    
+    
+</a>
+
+                        </div>
+                        
+                        <div class="item-inner">
+                            <p class="item-category"><a class="article-category-link" href="/categories/TensorFlow/">TensorFlow</a><i class="icon fa fa-angle-right"></i><a class="article-category-link" href="/categories/TensorFlow/App/">App</a></p>
+                            <p class="item-title"><a href="/2017/02/28/mnist-for-beginners/" class="title">초보자를 위한 MNIST(텐서플로우)</a></p>
+                            <p class="item-date"><time datetime="2017-02-28T00:17:40.000Z" itemprop="datePublished">2017-02-28</time></p>
+                        </div>
+                    </li>
+                
+                    <li>
+                        
+                        <div class="item-thumbnail">
+                            <a href="/2017/02/27/tensorflow-tasting/" class="thumbnail">
+    
+    
+        <span style="background-image:url(https://deeptensorflow.github.io/images/logo.png)" alt="텐서플로우 맛보기(기본 가이드)" class="thumbnail-image"></span>
+    
+    
+</a>
+
+                        </div>
+                        
+                        <div class="item-inner">
+                            <p class="item-category"><a class="article-category-link" href="/categories/Tensorflow/">Tensorflow</a><i class="icon fa fa-angle-right"></i><a class="article-category-link" href="/categories/Tensorflow/App/">App</a></p>
+                            <p class="item-title"><a href="/2017/02/27/tensorflow-tasting/" class="title">텐서플로우 맛보기(기본 가이드)</a></p>
+                            <p class="item-date"><time datetime="2017-02-26T23:35:14.000Z" itemprop="datePublished">2017-02-27</time></p>
+                        </div>
+                    </li>
+                
+                    <li>
+                        
+                        <div class="item-thumbnail">
+                            <a href="/2017/02/21/add-new-operation-on-tensorflow/" class="thumbnail">
+    
+    
+        <span style="background-image:url(https://deeptensorflow.github.io/images/logo.png)" alt="텐서플로우에 새로운 연산 추가하기(커스터마이징)" class="thumbnail-image"></span>
+    
+    
+</a>
+
+                        </div>
+                        
+                        <div class="item-inner">
+                            <p class="item-category"><a class="article-category-link" href="/categories/Tensorflow/">Tensorflow</a><i class="icon fa fa-angle-right"></i><a class="article-category-link" href="/categories/Tensorflow/Internal/">Internal</a></p>
+                            <p class="item-title"><a href="/2017/02/21/add-new-operation-on-tensorflow/" class="title">텐서플로우에 새로운 연산 추가하기(커스터마이징)</a></p>
+                            <p class="item-date"><time datetime="2017-02-21T13:24:53.000Z" itemprop="datePublished">2017-02-21</time></p>
+                        </div>
+                    </li>
+                
+                    <li>
+                        
+                        <div class="item-thumbnail">
+                            <a href="/2017/02/21/tensorflow-architecture-feature/" class="thumbnail">
+    
+    
+        <span style="background-image:url(https://deeptensorflow.github.io/images/tensorflowarchitecture.png)" alt="텐서플로우 내부 구조에 대해 알아보자" class="thumbnail-image"></span>
+    
+    
+</a>
+
+                        </div>
+                        
+                        <div class="item-inner">
+                            <p class="item-category"><a class="article-category-link" href="/categories/Tensorflow/">Tensorflow</a><i class="icon fa fa-angle-right"></i><a class="article-category-link" href="/categories/Tensorflow/Internal/">Internal</a></p>
+                            <p class="item-title"><a href="/2017/02/21/tensorflow-architecture-feature/" class="title">텐서플로우 내부 구조에 대해 알아보자</a></p>
+                            <p class="item-date"><time datetime="2017-02-21T06:33:44.000Z" itemprop="datePublished">2017-02-21</time></p>
+                        </div>
+                    </li>
+                
+                    <li>
+                        
+                        <div class="item-thumbnail">
+                            <a href="/2017/02/21/how-to-build-tensorflow-with-pip/" class="thumbnail">
+    
+    
+        <span style="background-image:url(https://deeptensorflow.github.io/images/bazel.png)" alt="텐서플로우 빌드하는 방법 (텐서플로우에 내코드 추가하기)" class="thumbnail-image"></span>
+    
+    
+</a>
+
+                        </div>
+                        
+                        <div class="item-inner">
+                            <p class="item-category"><a class="article-category-link" href="/categories/Tensorflow/">Tensorflow</a><i class="icon fa fa-angle-right"></i><a class="article-category-link" href="/categories/Tensorflow/Internal/">Internal</a></p>
+                            <p class="item-title"><a href="/2017/02/21/how-to-build-tensorflow-with-pip/" class="title">텐서플로우 빌드하는 방법 (텐서플로우에 내코드 추가하기)</a></p>
+                            <p class="item-date"><time datetime="2017-02-21T00:47:00.000Z" itemprop="datePublished">2017-02-21</time></p>
+                        </div>
+                    </li>
+                
+            </ul>
+        </div>
+    </div>
+
+            
+                
+    <div class="widget-wrap widget-list">
+        <h3 class="widget-title">categories</h3>
+        <div class="widget">
+            <ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="/categories/Machinelearning/">Machinelearning</a><span class="category-list-count">3</span><ul class="category-list-child"><li class="category-list-item"><a class="category-list-link" href="/categories/Machinelearning/Lecture/">Lecture</a><span class="category-list-count">1</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Machinelearning/News/">News</a><span class="category-list-count">2</span></li></ul></li><li class="category-list-item"><a class="category-list-link" href="/categories/TensorFlow/">TensorFlow</a><span class="category-list-count">1</span><ul class="category-list-child"><li class="category-list-item"><a class="category-list-link" href="/categories/TensorFlow/App/">App</a><span class="category-list-count">1</span></li></ul></li><li class="category-list-item"><a class="category-list-link" href="/categories/Tensorflow/">Tensorflow</a><span class="category-list-count">7</span><ul class="category-list-child"><li class="category-list-item"><a class="category-list-link" href="/categories/Tensorflow/App/">App</a><span class="category-list-count">4</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Tensorflow/Internal/">Internal</a><span class="category-list-count">3</span></li></ul></li></ul>
+        </div>
+    </div>
+
+
+            
+                
+    <div class="widget-wrap widget-list">
+        <h3 class="widget-title">archives</h3>
+        <div class="widget">
+            <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/02/">February 2017</a><span class="archive-list-count">11</span></li></ul>
+        </div>
+    </div>
+
+
+            
+                
+    <div class="widget-wrap widget-list">
+        <h3 class="widget-title">tags</h3>
+        <div class="widget">
+            <ul class="tag-list"><li class="tag-list-item"><a class="tag-list-link" href="/tags/MNIST/">MNIST</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/algorithm/">algorithm</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/bazel/">bazel</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/build/">build</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/install/">install</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/internal/">internal</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/lecture/">lecture</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/linearregression/">linearregression</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/machinelearning/">machinelearning</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/tensorflow/">tensorflow</a><span class="tag-list-count">8</span></li></ul>
+        </div>
+    </div>
+
+
+            
+                
+    <div class="widget-wrap widget-float">
+        <h3 class="widget-title">tag cloud</h3>
+        <div class="widget tagcloud">
+            <a href="/tags/MNIST/" style="font-size: 10px;">MNIST</a> <a href="/tags/algorithm/" style="font-size: 10px;">algorithm</a> <a href="/tags/bazel/" style="font-size: 10px;">bazel</a> <a href="/tags/build/" style="font-size: 13.33px;">build</a> <a href="/tags/install/" style="font-size: 13.33px;">install</a> <a href="/tags/internal/" style="font-size: 16.67px;">internal</a> <a href="/tags/lecture/" style="font-size: 10px;">lecture</a> <a href="/tags/linearregression/" style="font-size: 10px;">linearregression</a> <a href="/tags/machinelearning/" style="font-size: 16.67px;">machinelearning</a> <a href="/tags/tensorflow/" style="font-size: 20px;">tensorflow</a>
+        </div>
+    </div>
+
+
+            
+                
+    <div class="widget-wrap widget-list">
+        <h3 class="widget-title">links</h3>
+        <div class="widget">
+            <ul>
+                
+                    <li>
+                        <a href="http://hexo.io/" rel="external nofollow noopener noreferrer" target="_blank">Hexo</a>
+                    </li>
+                
+                    <li>
+                        <a href="https://www.tensorflow.org/" rel="external nofollow noopener noreferrer" target="_blank">Tensorflow</a>
+                    </li>
+                
+                    <li>
+                        <a href="http://www.kookmin.ac.kr/home.php" rel="external nofollow noopener noreferrer" target="_blank">KookminUniversity</a>
+                    </li>
+                
+            </ul>
+        </div>
+    </div>
+
+
+            
+        
+    </div>
+</aside>
+
+                </div>
+            </div>
+        </div>
+        <footer id="footer">
+    <div class="container">
+        <div class="container-inner">
+            <a id="back-to-top" href="javascript:;"><i class="icon fa fa-angle-up"></i></a>
+            <div class="credit">
+                <h1 class="logo-wrap">
+                    <a href="/" class="logo"></a>
+                </h1>
+                <p>&copy; 2017 MyeongsooKim</p>
+                <p>Powered by <a href="//hexo.io/" target="_blank">Hexo</a>. Theme by <a href="//github.com/ppoffice" target="_blank">PPOffice</a></p>
+            </div>
+        </div>
+    </div>
+</footer>
+        
+    
+    <script>
+    var disqus_shortname = 'deeptensorflow';
+    
+    
+    var disqus_url = 'https://deeptensorflow.github.io/2017/02/19/what-is-linear-regression-with-tensorflow/';
+    
+    (function() {
+    var dsq = document.createElement('script');
+    dsq.type = 'text/javascript';
+    dsq.async = true;
+    dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+    (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    })();
+    </script>
+
+
+
+
+    
+        <script src="/libs/lightgallery/js/lightgallery.min.js"></script>
+        <script src="/libs/lightgallery/js/lg-thumbnail.min.js"></script>
+        <script src="/libs/lightgallery/js/lg-pager.min.js"></script>
+        <script src="/libs/lightgallery/js/lg-autoplay.min.js"></script>
+        <script src="/libs/lightgallery/js/lg-fullscreen.min.js"></script>
+        <script src="/libs/lightgallery/js/lg-zoom.min.js"></script>
+        <script src="/libs/lightgallery/js/lg-hash.min.js"></script>
+        <script src="/libs/lightgallery/js/lg-share.min.js"></script>
+        <script src="/libs/lightgallery/js/lg-video.min.js"></script>
+    
+
+
+<!-- Custom Scripts -->
+<script src="/js/main.js"></script>
+
+    </div>
+</body>
+

@@ -1,0 +1,627 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    
+    <title>텐서플로우 내부 구조에 대해 알아보자 | Tensorflow Internal</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    
+        <meta name="keywords" content="tensorflow,internal">
+    
+
+      
+
+            <meta name="description" content="본 내용은 https://www.tensorflow.org/extend/architecture 공홈의 내용을 번역한 것입니다.
+텐서플로우의 내부는 어떻게 생겼을까?요런식으로 생겼습니다.주목해야할 점들은 다음과 같습니다.
+
+클라이언트(tensorflow로 코드를 작성하는 부분)
+계산을 data flow graph으로 정의
+세션을 사용하여 그래프 실행
+Dist">
+<meta property="og:type" content="article">
+<meta property="og:title" content="텐서플로우 내부 구조에 대해 알아보자">
+<meta property="og:url" content="https://deeptensorflow.github.io/2017/02/21/tensorflow-architecture-feature/index.html">
+<meta property="og:site_name" content="Tensorflow Internal">
+<meta property="og:description" content="본 내용은 https://www.tensorflow.org/extend/architecture 공홈의 내용을 번역한 것입니다.
+텐서플로우의 내부는 어떻게 생겼을까?요런식으로 생겼습니다.주목해야할 점들은 다음과 같습니다.
+
+클라이언트(tensorflow로 코드를 작성하는 부분)
+계산을 data flow graph으로 정의
+세션을 사용하여 그래프 실행
+Dist">
+<meta property="og:image" content="https://deeptensorflow.github.io/images/tensorflowarchitecture.png">
+<meta property="og:updated_time" content="2017-02-21T12:24:46.000Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="텐서플로우 내부 구조에 대해 알아보자">
+<meta name="twitter:description" content="본 내용은 https://www.tensorflow.org/extend/architecture 공홈의 내용을 번역한 것입니다.
+텐서플로우의 내부는 어떻게 생겼을까?요런식으로 생겼습니다.주목해야할 점들은 다음과 같습니다.
+
+클라이언트(tensorflow로 코드를 작성하는 부분)
+계산을 data flow graph으로 정의
+세션을 사용하여 그래프 실행
+Dist">
+<meta name="twitter:image" content="https://deeptensorflow.github.io/images/tensorflowarchitecture.png">
+<meta name="twitter:creator" content="@deeptensorflow">
+<link rel="publisher" href="deeptensorflow">
+<meta property="fb:admins" content="399789273734884">
+<meta property="fb:app_id" content="399789273734884">
+    
+
+    
+    <link rel="canonical" href="https://deeptensorflow.github.io/2017/02/21/tensorflow-architecture-feature/">
+    
+        <link rel="alternate" href="/feed.xml" title="Tensorflow Internal" type="application/atom+xml">
+    
+
+    
+        <link rel="icon" href="https://deeptensorflow.github.io/images/favicon.ico">
+    
+
+    <link rel="stylesheet" href="/libs/font-awesome/css/font-awesome.min.css">
+    <link rel="stylesheet" href="/libs/titillium-web/styles.css">
+    <link rel="stylesheet" href="/libs/source-code-pro/styles.css">
+
+    <link rel="stylesheet" href="/css/style.css">
+
+    <script src="/libs/jquery/2.0.3/jquery.min.js"></script>
+    
+    
+        <link rel="stylesheet" href="/libs/lightgallery/css/lightgallery.min.css">
+    
+    
+        <script type="text/javascript">
+(function(i,s,o,g,r,a,m) {i['GoogleAnalyticsObject']=r;i[r]=i[r]||function() {
+(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+})(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+ga('create', 'UA-92230405-1', 'auto');
+ga('send', 'pageview');
+
+</script>
+    
+    
+
+</head>
+</html>
+<body>
+    <div id="wrap">
+        <header id="header">
+    <div id="header-outer" class="outer">
+        <div class="container">
+            <div class="container-inner">
+                <div id="header-title">
+                    <h1 class="logo-wrap">
+                        <a href="/" class="logo"></a>
+                    </h1>
+                    
+                        <h2 class="subtitle-wrap">
+                            <p class="subtitle">All about tensorflow</p>
+                        </h2>
+                    
+                </div>
+                <div id="header-inner" class="nav-container">
+                    <a id="main-nav-toggle" class="nav-icon fa fa-bars"></a>
+                    <div class="nav-container-inner">
+                        <ul id="main-nav">
+                            
+                                <li class="main-nav-list-item">
+                                    <a class="main-nav-list-link" href="/">Home</a>
+                                </li>
+                            
+                                        <ul class="main-nav-list"><li class="main-nav-list-item"><a class="main-nav-list-link" href="/categories/Machinelearning/">Machinelearning</a><ul class="main-nav-list-child"><li class="main-nav-list-item"><a class="main-nav-list-link" href="/categories/Machinelearning/Lecture/">Lecture</a></li><li class="main-nav-list-item"><a class="main-nav-list-link" href="/categories/Machinelearning/News/">News</a></li></ul></li><li class="main-nav-list-item"><a class="main-nav-list-link" href="/categories/TensorFlow/">TensorFlow</a><ul class="main-nav-list-child"><li class="main-nav-list-item"><a class="main-nav-list-link" href="/categories/TensorFlow/App/">App</a></li></ul></li><li class="main-nav-list-item"><a class="main-nav-list-link" href="/categories/Tensorflow/">Tensorflow</a><ul class="main-nav-list-child"><li class="main-nav-list-item"><a class="main-nav-list-link" href="/categories/Tensorflow/App/">App</a></li><li class="main-nav-list-item"><a class="main-nav-list-link" href="/categories/Tensorflow/Internal/">Internal</a></li></ul></li></ul>
+                                    
+                        </ul>
+                        <nav id="sub-nav">
+                            <div id="search-form-wrap">
+
+    <form class="search-form">
+        <input type="text" class="ins-search-input search-form-input" placeholder="Search">
+        <button type="submit" class="search-form-submit"></button>
+    </form>
+    <div class="ins-search">
+    <div class="ins-search-mask"></div>
+    <div class="ins-search-container">
+        <div class="ins-input-wrapper">
+            <input type="text" class="ins-search-input" placeholder="Type something...">
+            <span class="ins-close ins-selectable"><i class="fa fa-times-circle"></i></span>
+        </div>
+        <div class="ins-section-wrapper">
+            <div class="ins-section-container"></div>
+        </div>
+    </div>
+</div>
+<script>
+(function (window) {
+    var INSIGHT_CONFIG = {
+        TRANSLATION: {
+            POSTS: 'Posts',
+            PAGES: 'Pages',
+            CATEGORIES: 'Categories',
+            TAGS: 'Tags',
+            UNTITLED: '(Untitled)',
+        },
+        ROOT_URL: '/',
+        CONTENT_URL: '/content.json',
+    };
+    window.INSIGHT_CONFIG = INSIGHT_CONFIG;
+})(window);
+</script>
+<script src="/js/insight.js"></script>
+
+</div>
+                        </nav>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</header>
+        <div class="container">
+            <div class="main-body container-inner">
+                <div class="main-body-inner">
+                    <section id="main">
+                        <div class="main-body-header">
+    <h1 class="header">
+    
+    <a class="page-title-link" href="/categories/Tensorflow/">Tensorflow</a><i class="icon fa fa-angle-right"></i><a class="page-title-link" href="/categories/Tensorflow/Internal/">Internal</a>
+    </h1>
+</div>
+                        <div class="main-body-content">
+                            <article id="post-tensorflow-architecture-feature" class="article article-single article-type-post" itemscope="" itemprop="blogPost">
+    <div class="article-inner">
+        
+            <header class="article-header">
+                
+    
+        <h1 class="article-title" itemprop="name">
+        텐서플로우 내부 구조에 대해 알아보자
+        </h1>
+    
+
+            </header>
+        
+        
+            <div class="article-subtitle">
+                <a href="/2017/02/21/tensorflow-architecture-feature/" class="article-date">
+    <time datetime="2017-02-21T06:33:44.000Z" itemprop="datePublished">2017-02-21</time>
+</a>
+                
+    <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/internal/">internal</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/tensorflow/">tensorflow</a></li></ul>
+
+            </div>
+        
+        
+        <div class="article-entry" itemprop="articleBody">
+            <p>본 내용은 <a href="https://www.tensorflow.org/extend/architecture" rel="external nofollow noopener noreferrer" target="_blank">https://www.tensorflow.org/extend/architecture</a> 공홈의 내용을 번역한 것입니다.</p>
+<h1 id="텐서플로우의-내부는-어떻게-생겼을까"><a href="#텐서플로우의-내부는-어떻게-생겼을까" class="headerlink" title="텐서플로우의 내부는 어떻게 생겼을까?"></a>텐서플로우의 내부는 어떻게 생겼을까?</h1><p><img src="https://deeptensorflow.github.io/images/tensorflowarchitecture.png" alt="tensorflowarchitecture"><br>요런식으로 생겼습니다.<br>주목해야할 점들은 다음과 같습니다.</p>
+<ul>
+<li>클라이언트(tensorflow로 코드를 작성하는 부분)</li>
+<li>계산을 data flow graph으로 정의</li>
+<li>세션을 사용하여 그래프 실행</li>
+<li>Distributed Master</li>
+<li>Session.run ()의 인수로 사용된 특정부분의 그래프를 정리</li>
+<li>하위 그래프를 다른 프로세스와 장치에서 실행되는 여러 조각으로 분할</li>
+<li>그래프 조각을 worker에 뿌림</li>
+<li>worker service</li>
+<li>사용 가능한 하드웨어 (CPU, GPU 등)에 적합한 커널 구현을 사용하여 그래프 작업 스케줄링 가능</li>
+<li>다른 작업자 서비스와 작업 결과를 송수신</li>
+<li>커널 구현</li>
+<li>개별 그래프에 대한 연산 수행</li>
+</ul>
+<h1 id="대략적인-워크-플로우-그래프"><a href="#대략적인-워크-플로우-그래프" class="headerlink" title="대략적인 워크 플로우 그래프"></a>대략적인 워크 플로우 그래프</h1><p><img src="https://deeptensorflow.github.io/images/tensorflow_worker.png" alt="텐서플로우워커"><br>저 위의 그림에서 MASTER는 분산 프로그래밍된 TensorFlow에만 존재합니다.<br>Tensorflow가 단일버전으로 이루어져있다면 마스터가하는 모든 작업을 수행하지만 로컬 프로세스의 장치와만 통신하는 특수 세션 구현이 포함됩니다.</p>
+<h1 id="클라이언트에서-일어나는-일"><a href="#클라이언트에서-일어나는-일" class="headerlink" title="클라이언트에서 일어나는 일"></a>클라이언트에서 일어나는 일</h1><p>사용자는 계산 그래프를 작성하는 클라이언트 TensorFlow 프로그램을 작성합니다.<br>여러 라이브러리들을 써서 작업할수도 있으며 여러 layer들을 구성해 가며 추상화 작업을 진행합니다.<br>TensorFlow는 Python과 C++언어를 지원합니다.</p>
+<h1 id="Distributed-master에서-일어나는-일"><a href="#Distributed-master에서-일어나는-일" class="headerlink" title="Distributed master에서 일어나는 일"></a>Distributed master에서 일어나는 일</h1><p>그래프를 분할하는 작업을 합니다.<br>이렇게 분할된 그래프에 분산 노드간에 정보를 전달하기 위해 송수신 노드를 삽입합니다<br><img src="https://deeptensorflow.github.io/images/psandworker" alt="psandworker"><br>그리고는 task에게 일을 전달하는 것입니다.<br>이런식으로 텐서플로우에서는 코드를 병렬적으로 빠르게 수행할 수가 있습니다.</p>
+<h1 id="Worker가-하는-일"><a href="#Worker가-하는-일" class="headerlink" title="Worker가 하는 일"></a>Worker가 하는 일</h1><ul>
+<li>마스터로부터 온 일을 처리함</li>
+<li>연산에 대한 커널의 실행들을 스케줄링함</li>
+<li>작업간의 직접적인 통신 역할(한쪽이 죽으면 그 일을 다른곳에 넘긴다던지..)<br>Worker는 커널을 로컬 장치에 디스패치하고 가능하면 다중 CPU 코어 또는 GPU 스트림을 사용하여 병렬로 커널을 실행합니다.</li>
+</ul>
+<p>즉 Worker는 장치 유형의 각 쌍에 대해 Send 및 Recv 작업을 전문적으로 수행합니다.<br>1) CPU와 CPU 끼리는 cudaMemcpyAsync() API를 사용하여 계산 및 데이터 전송을 중첩합니다.<br>2) CPU와 GPU 끼리는 값 비싼 복사를 피하기 위해 peer to peer DMA를 사용합니다.</p>
+<p>작업간 전송의 경우 tensorflow는 다음의 프로토콜을 사용합니다.<br>1) TCP를 통한 gRPC<br>2) 수렴형 이더넷을 통한 RDMA</p>
+<p>또한 다중 GPU 통신을위한 NVIDIA의 NCCL 라이브러리에 대한 예비 지원을 받았습니다.</p>
+<h1 id="커널-구현"><a href="#커널-구현" class="headerlink" title="커널 구현"></a>커널 구현</h1><p>런타임에는 수학, 배열 조작, 제어 흐름 및 상태 관리 작업을 포함하여 200 개가 넘는 표준 작업이 포함됩니다.<br>각 작업들은 각 device에 맞게 최적화시킬 수 있습니다.<br>많은 운영 커널은 Eigen :: Tensor를 사용하여 구현되며, C ++ 템플릿을 사용하여 멀티 코어 CPU 및 GPU를위한 효율적인 병렬 코드를 생성합니다.<br>그러나 우리는보다 효율적인 커널 구현이 가능한 cuDNN과 같은 라이브러리를 자유롭게 사용합니다.<br>우리는 또한 모바일 장치 및 고처리량 데이터센터 응용프로그램과 같은 환경에서 더 빠른 추론을 가능하게하는 quantization을 구현했으며 quantum 연산을 가속화하기 위해 gemmlowp low-precision matrix library 를 사용합니다.<br>하위 연산을 연산 조합으로 나타 내기가 어렵거나 비효율적 인 경우 사용자는 C ++로 작성된 효율적인 구현을 제공하는 추가 커널을 등록 할 수 있습니다.</p>
+
+        </div>
+        <footer class="article-footer">
+            
+
+
+
+    <a data-url="https://deeptensorflow.github.io/2017/02/21/tensorflow-architecture-feature/" data-id="cizoxxooa000amuhsfcd2x0zx" class="article-share-link"><i class="fa fa-share"></i>Share</a>
+<script>
+    (function ($) {
+        $('body').on('click', function() {
+            $('.article-share-box.on').removeClass('on');
+        }).on('click', '.article-share-link', function(e) {
+            e.stopPropagation();
+
+            var $this = $(this),
+                url = $this.attr('data-url'),
+                encodedUrl = encodeURIComponent(url),
+                id = 'article-share-box-' + $this.attr('data-id'),
+                offset = $this.offset(),
+                box;
+
+            if ($('#' + id).length) {
+                box = $('#' + id);
+
+                if (box.hasClass('on')){
+                    box.removeClass('on');
+                    return;
+                }
+            } else {
+                var html = [
+                    '<div id="' + id + '" class="article-share-box">',
+                        '<input class="article-share-input" value="' + url + '">',
+                        '<div class="article-share-links">',
+                            '<a href="https://twitter.com/intent/tweet?url=' + encodedUrl + '" class="article-share-twitter" target="_blank" title="Twitter"></a>',
+                            '<a href="https://www.facebook.com/sharer.php?u=' + encodedUrl + '" class="article-share-facebook" target="_blank" title="Facebook"></a>',
+                            '<a href="http://pinterest.com/pin/create/button/?url=' + encodedUrl + '" class="article-share-pinterest" target="_blank" title="Pinterest"></a>',
+                            '<a href="https://plus.google.com/share?url=' + encodedUrl + '" class="article-share-google" target="_blank" title="Google+"></a>',
+                        '</div>',
+                    '</div>'
+                ].join('');
+
+              box = $(html);
+
+              $('body').append(box);
+            }
+
+            $('.article-share-box.on').hide();
+
+            box.css({
+                top: offset.top + 25,
+                left: offset.left
+            }).addClass('on');
+
+        }).on('click', '.article-share-box', function (e) {
+            e.stopPropagation();
+        }).on('click', '.article-share-box-input', function () {
+            $(this).select();
+        }).on('click', '.article-share-box-link', function (e) {
+            e.preventDefault();
+            e.stopPropagation();
+
+            window.open(this.href, 'article-share-box-window-' + Date.now(), 'width=500,height=450');
+        });
+    })(jQuery);
+</script>
+
+        </footer>
+    </div>
+</article>
+
+    <section id="comments">
+    
+        
+    <div id="disqus_thread">
+        <noscript>Please enable JavaScript to view the <a href="//disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+    </div>
+
+    
+    </section>
+
+
+                        </div>
+                    </section>
+                    <aside id="sidebar">
+    <a class="sidebar-toggle" title="Expand Sidebar"><i class="toggle icon"></i></a>
+    <div class="sidebar-top">
+        <p>follow:</p>
+        <ul class="social-links">
+            
+                
+                <li>
+                    <a class="social-tooltip" title="internet-explorer" href="http://blog.naver.com/deeptensorflow/" target="_blank" rel="external nofollow noopener noreferrer">
+                        <i class="icon fa fa-internet-explorer"></i>
+                    </a>
+                </li>
+                
+            
+                
+                <li>
+                    <a class="social-tooltip" title="twitter" href="https://twitter.com/deeptensorflow/" target="_blank" rel="external nofollow noopener noreferrer">
+                        <i class="icon fa fa-twitter"></i>
+                    </a>
+                </li>
+                
+            
+                
+                <li>
+                    <a class="social-tooltip" title="facebook" href="https://www.facebook.com/deeptensorflow/" target="_blank" rel="external nofollow noopener noreferrer">
+                        <i class="icon fa fa-facebook"></i>
+                    </a>
+                </li>
+                
+            
+                
+                <li>
+                    <a class="social-tooltip" title="github" href="https://github.com/deeptensorflow/" target="_blank" rel="external nofollow noopener noreferrer">
+                        <i class="icon fa fa-github"></i>
+                    </a>
+                </li>
+                
+            
+                
+                <li>
+                    <a class="social-tooltip" title="rss" href="/feed.xml" target="_blank">
+                        <i class="icon fa fa-rss"></i>
+                    </a>
+                </li>
+                
+            
+        </ul>
+    </div>
+    <div class="github-card" data-github="deeptensorflow" data-width="" data-height="" data-theme="default"></div>
+    <script src="//cdn.jsdelivr.net/github-cards/latest/widget.js"></script>
+    
+        
+<nav id="article-nav">
+    
+        <a href="/2017/02/21/add-new-operation-on-tensorflow/" id="article-nav-newer" class="article-nav-link-wrap">
+        <strong class="article-nav-caption">newer</strong>
+        <p class="article-nav-title">
+        
+            텐서플로우에 새로운 연산 추가하기(커스터마이징)
+        
+        </p>
+        <i class="icon fa fa-chevron-right" id="icon-chevron-right"></i>
+    </a>
+    
+    
+        <a href="/2017/02/21/how-to-build-tensorflow-with-pip/" id="article-nav-older" class="article-nav-link-wrap">
+        <strong class="article-nav-caption">older</strong>
+        <p class="article-nav-title">텐서플로우 빌드하는 방법 (텐서플로우에 내코드 추가하기)</p>
+        <i class="icon fa fa-chevron-left" id="icon-chevron-left"></i>
+        </a>
+    
+</nav>
+
+    
+    <div class="widgets-container">
+        <div class="widgets-wrap"><img src="https://deeptensorflow.github.io/images/kookminuv.png" style="width: 100%"> <div style="padding: 2px 16px; background-color: #effbfc">
+    <h4><b>김명수</b></h4>
+    <p>국민대학교 컴퓨터공학부 3학년</p>
+    <p>소속: 임은진교수님 연구실</p>
+    <p>지원: 경주현 연구원</p>
+    <p>서버 컴퓨터: 120-core (8 sockets × 15cores) Intel Xeon E7-8870</p>
+    <p>연구: Large-scale 또는 Many-core 시스템을 위한 텐서플로우의 내부 구조파악 및 연구</p>
+  </div></div>
+        
+            
+                
+    <div class="widget-wrap">
+        <h3 class="widget-title">recents</h3>
+        <div class="widget">
+            <ul id="recent-post" class="">
+                
+                    <li>
+                        
+                        <div class="item-thumbnail">
+                            <a href="/2017/02/28/mnist-for-beginners/" class="thumbnail">
+    
+    
+        <span style="background-image:url(https://deeptensorflow.github.io/images/logo.png)" alt="초보자를 위한 MNIST(텐서플로우)" class="thumbnail-image"></span>
+    
+    
+</a>
+
+                        </div>
+                        
+                        <div class="item-inner">
+                            <p class="item-category"><a class="article-category-link" href="/categories/TensorFlow/">TensorFlow</a><i class="icon fa fa-angle-right"></i><a class="article-category-link" href="/categories/TensorFlow/App/">App</a></p>
+                            <p class="item-title"><a href="/2017/02/28/mnist-for-beginners/" class="title">초보자를 위한 MNIST(텐서플로우)</a></p>
+                            <p class="item-date"><time datetime="2017-02-28T00:17:40.000Z" itemprop="datePublished">2017-02-28</time></p>
+                        </div>
+                    </li>
+                
+                    <li>
+                        
+                        <div class="item-thumbnail">
+                            <a href="/2017/02/27/tensorflow-tasting/" class="thumbnail">
+    
+    
+        <span style="background-image:url(https://deeptensorflow.github.io/images/logo.png)" alt="텐서플로우 맛보기(기본 가이드)" class="thumbnail-image"></span>
+    
+    
+</a>
+
+                        </div>
+                        
+                        <div class="item-inner">
+                            <p class="item-category"><a class="article-category-link" href="/categories/Tensorflow/">Tensorflow</a><i class="icon fa fa-angle-right"></i><a class="article-category-link" href="/categories/Tensorflow/App/">App</a></p>
+                            <p class="item-title"><a href="/2017/02/27/tensorflow-tasting/" class="title">텐서플로우 맛보기(기본 가이드)</a></p>
+                            <p class="item-date"><time datetime="2017-02-26T23:35:14.000Z" itemprop="datePublished">2017-02-27</time></p>
+                        </div>
+                    </li>
+                
+                    <li>
+                        
+                        <div class="item-thumbnail">
+                            <a href="/2017/02/21/add-new-operation-on-tensorflow/" class="thumbnail">
+    
+    
+        <span style="background-image:url(https://deeptensorflow.github.io/images/logo.png)" alt="텐서플로우에 새로운 연산 추가하기(커스터마이징)" class="thumbnail-image"></span>
+    
+    
+</a>
+
+                        </div>
+                        
+                        <div class="item-inner">
+                            <p class="item-category"><a class="article-category-link" href="/categories/Tensorflow/">Tensorflow</a><i class="icon fa fa-angle-right"></i><a class="article-category-link" href="/categories/Tensorflow/Internal/">Internal</a></p>
+                            <p class="item-title"><a href="/2017/02/21/add-new-operation-on-tensorflow/" class="title">텐서플로우에 새로운 연산 추가하기(커스터마이징)</a></p>
+                            <p class="item-date"><time datetime="2017-02-21T13:24:53.000Z" itemprop="datePublished">2017-02-21</time></p>
+                        </div>
+                    </li>
+                
+                    <li>
+                        
+                        <div class="item-thumbnail">
+                            <a href="/2017/02/21/tensorflow-architecture-feature/" class="thumbnail">
+    
+    
+        <span style="background-image:url(https://deeptensorflow.github.io/images/tensorflowarchitecture.png)" alt="텐서플로우 내부 구조에 대해 알아보자" class="thumbnail-image"></span>
+    
+    
+</a>
+
+                        </div>
+                        
+                        <div class="item-inner">
+                            <p class="item-category"><a class="article-category-link" href="/categories/Tensorflow/">Tensorflow</a><i class="icon fa fa-angle-right"></i><a class="article-category-link" href="/categories/Tensorflow/Internal/">Internal</a></p>
+                            <p class="item-title"><a href="/2017/02/21/tensorflow-architecture-feature/" class="title">텐서플로우 내부 구조에 대해 알아보자</a></p>
+                            <p class="item-date"><time datetime="2017-02-21T06:33:44.000Z" itemprop="datePublished">2017-02-21</time></p>
+                        </div>
+                    </li>
+                
+                    <li>
+                        
+                        <div class="item-thumbnail">
+                            <a href="/2017/02/21/how-to-build-tensorflow-with-pip/" class="thumbnail">
+    
+    
+        <span style="background-image:url(https://deeptensorflow.github.io/images/bazel.png)" alt="텐서플로우 빌드하는 방법 (텐서플로우에 내코드 추가하기)" class="thumbnail-image"></span>
+    
+    
+</a>
+
+                        </div>
+                        
+                        <div class="item-inner">
+                            <p class="item-category"><a class="article-category-link" href="/categories/Tensorflow/">Tensorflow</a><i class="icon fa fa-angle-right"></i><a class="article-category-link" href="/categories/Tensorflow/Internal/">Internal</a></p>
+                            <p class="item-title"><a href="/2017/02/21/how-to-build-tensorflow-with-pip/" class="title">텐서플로우 빌드하는 방법 (텐서플로우에 내코드 추가하기)</a></p>
+                            <p class="item-date"><time datetime="2017-02-21T00:47:00.000Z" itemprop="datePublished">2017-02-21</time></p>
+                        </div>
+                    </li>
+                
+            </ul>
+        </div>
+    </div>
+
+            
+                
+    <div class="widget-wrap widget-list">
+        <h3 class="widget-title">categories</h3>
+        <div class="widget">
+            <ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="/categories/Machinelearning/">Machinelearning</a><span class="category-list-count">3</span><ul class="category-list-child"><li class="category-list-item"><a class="category-list-link" href="/categories/Machinelearning/Lecture/">Lecture</a><span class="category-list-count">1</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Machinelearning/News/">News</a><span class="category-list-count">2</span></li></ul></li><li class="category-list-item"><a class="category-list-link" href="/categories/TensorFlow/">TensorFlow</a><span class="category-list-count">1</span><ul class="category-list-child"><li class="category-list-item"><a class="category-list-link" href="/categories/TensorFlow/App/">App</a><span class="category-list-count">1</span></li></ul></li><li class="category-list-item"><a class="category-list-link" href="/categories/Tensorflow/">Tensorflow</a><span class="category-list-count">7</span><ul class="category-list-child"><li class="category-list-item"><a class="category-list-link" href="/categories/Tensorflow/App/">App</a><span class="category-list-count">4</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Tensorflow/Internal/">Internal</a><span class="category-list-count">3</span></li></ul></li></ul>
+        </div>
+    </div>
+
+
+            
+                
+    <div class="widget-wrap widget-list">
+        <h3 class="widget-title">archives</h3>
+        <div class="widget">
+            <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/02/">February 2017</a><span class="archive-list-count">11</span></li></ul>
+        </div>
+    </div>
+
+
+            
+                
+    <div class="widget-wrap widget-list">
+        <h3 class="widget-title">tags</h3>
+        <div class="widget">
+            <ul class="tag-list"><li class="tag-list-item"><a class="tag-list-link" href="/tags/MNIST/">MNIST</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/algorithm/">algorithm</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/bazel/">bazel</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/build/">build</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/install/">install</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/internal/">internal</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/lecture/">lecture</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/linearregression/">linearregression</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/machinelearning/">machinelearning</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/tensorflow/">tensorflow</a><span class="tag-list-count">8</span></li></ul>
+        </div>
+    </div>
+
+
+            
+                
+    <div class="widget-wrap widget-float">
+        <h3 class="widget-title">tag cloud</h3>
+        <div class="widget tagcloud">
+            <a href="/tags/MNIST/" style="font-size: 10px;">MNIST</a> <a href="/tags/algorithm/" style="font-size: 10px;">algorithm</a> <a href="/tags/bazel/" style="font-size: 10px;">bazel</a> <a href="/tags/build/" style="font-size: 13.33px;">build</a> <a href="/tags/install/" style="font-size: 13.33px;">install</a> <a href="/tags/internal/" style="font-size: 16.67px;">internal</a> <a href="/tags/lecture/" style="font-size: 10px;">lecture</a> <a href="/tags/linearregression/" style="font-size: 10px;">linearregression</a> <a href="/tags/machinelearning/" style="font-size: 16.67px;">machinelearning</a> <a href="/tags/tensorflow/" style="font-size: 20px;">tensorflow</a>
+        </div>
+    </div>
+
+
+            
+                
+    <div class="widget-wrap widget-list">
+        <h3 class="widget-title">links</h3>
+        <div class="widget">
+            <ul>
+                
+                    <li>
+                        <a href="http://hexo.io/" rel="external nofollow noopener noreferrer" target="_blank">Hexo</a>
+                    </li>
+                
+                    <li>
+                        <a href="https://www.tensorflow.org/" rel="external nofollow noopener noreferrer" target="_blank">Tensorflow</a>
+                    </li>
+                
+                    <li>
+                        <a href="http://www.kookmin.ac.kr/home.php" rel="external nofollow noopener noreferrer" target="_blank">KookminUniversity</a>
+                    </li>
+                
+            </ul>
+        </div>
+    </div>
+
+
+            
+        
+    </div>
+</aside>
+
+                </div>
+            </div>
+        </div>
+        <footer id="footer">
+    <div class="container">
+        <div class="container-inner">
+            <a id="back-to-top" href="javascript:;"><i class="icon fa fa-angle-up"></i></a>
+            <div class="credit">
+                <h1 class="logo-wrap">
+                    <a href="/" class="logo"></a>
+                </h1>
+                <p>&copy; 2017 MyeongsooKim</p>
+                <p>Powered by <a href="//hexo.io/" target="_blank">Hexo</a>. Theme by <a href="//github.com/ppoffice" target="_blank">PPOffice</a></p>
+            </div>
+        </div>
+    </div>
+</footer>
+        
+    
+    <script>
+    var disqus_shortname = 'deeptensorflow';
+    
+    
+    var disqus_url = 'https://deeptensorflow.github.io/2017/02/21/tensorflow-architecture-feature/';
+    
+    (function() {
+    var dsq = document.createElement('script');
+    dsq.type = 'text/javascript';
+    dsq.async = true;
+    dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+    (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    })();
+    </script>
+
+
+
+
+    
+        <script src="/libs/lightgallery/js/lightgallery.min.js"></script>
+        <script src="/libs/lightgallery/js/lg-thumbnail.min.js"></script>
+        <script src="/libs/lightgallery/js/lg-pager.min.js"></script>
+        <script src="/libs/lightgallery/js/lg-autoplay.min.js"></script>
+        <script src="/libs/lightgallery/js/lg-fullscreen.min.js"></script>
+        <script src="/libs/lightgallery/js/lg-zoom.min.js"></script>
+        <script src="/libs/lightgallery/js/lg-hash.min.js"></script>
+        <script src="/libs/lightgallery/js/lg-share.min.js"></script>
+        <script src="/libs/lightgallery/js/lg-video.min.js"></script>
+    
+
+
+<!-- Custom Scripts -->
+<script src="/js/main.js"></script>
+
+    </div>
+</body>
+
